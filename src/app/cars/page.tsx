@@ -68,15 +68,15 @@ function CarsContent() {
       {/* Search Header Banner */}
       <div className="bg-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl">
         <div className="max-w-3xl space-y-2 mb-6">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-bold">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/20 text-red-400 text-xs font-bold">
             <MapPin className="w-3.5 h-3.5" />
             <span>{selectedLoc ? `Available Cars in ${selectedLoc.area_locality}, Proddatur` : 'Proddatur & Kadapa Verified Fleet'}</span>
           </div>
           <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight">
-            Explore Self-Drive Cars in Proddatur
+            Explore Cars in Proddatur — Self-Drive & With Driver
           </h1>
           <p className="text-xs sm:text-sm text-slate-300">
-            Real-time availability, sanitized cars, instant confirmation & doorstep delivery in Proddatur.
+            Choose between Self-Drive or Professional Chauffeur. Real-time availability & doorstep delivery in Proddatur.
           </p>
         </div>
 
@@ -96,7 +96,7 @@ function CarsContent() {
             onClick={() => setMobileFilterOpen(!mobileFilterOpen)}
             className="lg:hidden flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-700 shadow-sm"
           >
-            <SlidersHorizontal className="w-3.5 h-3.5 text-emerald-600" />
+            <SlidersHorizontal className="w-3.5 h-3.5 text-[#D71920]" />
             <span>Filters</span>
           </button>
 
@@ -154,7 +154,7 @@ function CarsContent() {
               </p>
               <button
                 onClick={handleResetFilters}
-                className="px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold shadow-sm"
+                className="px-4 py-2 rounded-xl bg-[#D71920] text-white text-xs font-bold shadow-sm"
               >
                 Reset All Filters
               </button>

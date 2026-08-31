@@ -26,7 +26,14 @@ export default function CarCard({ car }: { car: Car }) {
           </span>
         </div>
 
-        <div className="absolute bottom-3 left-3">
+        <div className="absolute bottom-3 left-3 flex items-center gap-1.5">
+          <span className="px-2.5 py-1 rounded-lg bg-white/95 backdrop-blur text-slate-900 text-xs font-extrabold capitalize shadow-sm">
+            {car.transmission}
+          </span>
+          <span className="px-2 py-1 rounded-lg bg-[#111111]/90 backdrop-blur text-white text-[10px] font-bold shadow-sm">
+            👔 Driver Opt.
+          </span>
+        </div>
           <span className="px-2.5 py-1 rounded-lg bg-white/95 backdrop-blur text-slate-900 text-xs font-extrabold capitalize shadow-sm">
             {car.transmission}
           </span>
