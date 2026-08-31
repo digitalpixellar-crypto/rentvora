@@ -141,6 +141,8 @@ export interface Booking {
   delivery_address?: string;
   base_rental_amount: number;
   delivery_amount: number;
+  driver_allowance_amount?: number;
+  discount_amount?: number;
   taxes_fees_amount: number;
   security_deposit_amount: number;
   total_amount: number;
