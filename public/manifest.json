@@ -1,0 +1,56 @@
+{
+  "name": "RENTVORA — Self-Drive Car Rental",
+  "short_name": "RENTVORA",
+  "description": "Rent verified self-drive cars in Proddatur, Kadapa & Andhra Pradesh with transparent pricing and instant booking.",
+  "start_url": "/",
+  "id": "/",
+  "display": "standalone",
+  "background_color": "#FFFFFF",
+  "theme_color": "#D71920",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "categories": ["travel", "transportation", "lifestyle"],
+  "icons": [
+    {
+      "src": "/images/rentvora-logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/images/rentvora-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/images/rentvora-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Explore Fleet",
+      "short_name": "Cars",
+      "description": "Search available cars in Proddatur",
+      "url": "/cars",
+      "icons": [{ "src": "/images/rentvora-logo.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "My Bookings",
+      "short_name": "Bookings",
+      "description": "View your active and upcoming rentals",
+      "url": "/customer/dashboard",
+      "icons": [{ "src": "/images/rentvora-logo.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Host Portal",
+      "short_name": "Host",
+      "description": "Manage your listed cars and earnings",
+      "url": "/owner/dashboard",
+      "icons": [{ "src": "/images/rentvora-logo.png", "sizes": "192x192" }]
+    }
+  ]
+}
