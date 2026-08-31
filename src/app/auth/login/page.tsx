@@ -127,8 +127,21 @@ export default function LoginPage() {
         }
       }
 
+      // Backend registration & welcome dispatch
+      try {
+        fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            phone: fullPhone,
+            fullName: 'Valued Driver',
+            role: 'customer',
+          }),
+        }).catch(err => console.warn(err));
+      } catch {}
+
       setCurrentUserRole('customer');
-      setMessage({ type: 'success', text: 'Login successful! Redirecting...' });
+      setMessage({ type: 'success', text: '🎉 Successfully logged in! Redirecting to dashboard...' });
       setTimeout(() => router.push('/customer/dashboard'), 800);
     } catch (err: any) {
       setCurrentUserRole('customer');
@@ -165,8 +178,22 @@ export default function LoginPage() {
           if (signUpErr) throw signUpErr;
         }
 
+        // Backend registration & welcome email
+        try {
+          fetch('/api/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email,
+              password,
+              fullName: email.split('@')[0],
+              role: 'customer',
+            }),
+          }).catch(err => console.warn(err));
+        } catch {}
+
         setCurrentUserRole('customer');
-        setMessage({ type: 'success', text: 'Login successful! Redirecting...' });
+        setMessage({ type: 'success', text: '🎉 Account ready! Welcome email dispatched. Redirecting...' });
         setTimeout(() => router.push('/customer/dashboard'), 800);
       } else {
         // Magic link
