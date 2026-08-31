@@ -34,10 +34,6 @@ export default function CarCard({ car }: { car: Car }) {
             👔 Driver Opt.
           </span>
         </div>
-          <span className="px-2.5 py-1 rounded-lg bg-white/95 backdrop-blur text-slate-900 text-xs font-extrabold capitalize shadow-sm">
-            {car.transmission}
-          </span>
-        </div>
 
         {car.delivery_available && (
           <div className="absolute top-3 right-3">

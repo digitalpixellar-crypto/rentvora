@@ -50,9 +50,7 @@ export default function CarDetailsPage() {
   const [pickupTime, setPickupTime] = useState('10:00');
   const [dropoffDate, setDropoffDate] = useState(returnDateStr);
   const [dropoffTime, setDropoffTime] = useState('10:00');
-  const [deliveryRequested,
-        rental_type: rentalType,
-        withDriver: rentalType === "with_driver", setDeliveryRequested] = useState(false);
+  const [deliveryRequested, setDeliveryRequested] = useState(false);
   const [rentalType, setRentalType] = useState<'self_drive' | 'with_driver'>('self_drive');
   const [deliveryAddress, setDeliveryAddress] = useState('');
   const [selectedPickupLocationId, setSelectedPickupLocationId] = useState(car?.location_id || locations[0]?.id || '');
