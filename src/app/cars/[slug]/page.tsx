@@ -50,7 +50,10 @@ export default function CarDetailsPage() {
   const [pickupTime, setPickupTime] = useState('10:00');
   const [dropoffDate, setDropoffDate] = useState(returnDateStr);
   const [dropoffTime, setDropoffTime] = useState('10:00');
-  const [deliveryRequested, setDeliveryRequested] = useState(false);
+  const [deliveryRequested,
+        rental_type: rentalType,
+        withDriver: rentalType === "with_driver", setDeliveryRequested] = useState(false);
+  const [rentalType, setRentalType] = useState<'self_drive' | 'with_driver'>('self_drive');
   const [deliveryAddress, setDeliveryAddress] = useState('');
   const [selectedPickupLocationId, setSelectedPickupLocationId] = useState(car?.location_id || locations[0]?.id || '');
 
@@ -84,7 +87,7 @@ export default function CarDetailsPage() {
     } catch {
       return null;
     }
-  }, [car, deliveryRequested, startIsoString, endIsoString, commissionRate]);
+  }, [car, deliveryRequested, rentalType, startIsoString, endIsoString, commissionRate]);
 
   // Real-time Availability check
   const isCarAvailable = useMemo(() => {
@@ -97,7 +100,7 @@ export default function CarDetailsPage() {
       <div className="max-w-4xl mx-auto px-4 py-20 text-center space-y-4">
         <h2 className="text-2xl font-bold text-slate-900">Car Not Found</h2>
         <p className="text-sm text-slate-500">The vehicle you are looking for does not exist or has been removed.</p>
-        <Link href="/cars" className="inline-block px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold">
+        <Link href="/cars" className="inline-block px-4 py-2 rounded-xl bg-[#D71920] text-white text-xs font-bold">
           Explore Available Cars
         </Link>
       </div>
@@ -148,9 +151,9 @@ export default function CarDetailsPage() {
       
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-xs text-slate-500 font-medium">
-        <Link href="/" className="hover:text-emerald-600">Home</Link>
+        <Link href="/" className="hover:text-[#D71920]">Home</Link>
         <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-        <Link href="/cars" className="hover:text-emerald-600">Cars in Proddatur</Link>
+        <Link href="/cars" className="hover:text-[#D71920]">Cars in Proddatur</Link>
         <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
         <span className="text-slate-900 font-semibold">{car.brand} {car.model}</span>
       </nav>
@@ -173,7 +176,7 @@ export default function CarDetailsPage() {
                 <span className="px-3 py-1 rounded-full bg-slate-900/80 backdrop-blur text-white text-xs font-bold uppercase tracking-wider">
                   {car.category.replace('_', ' ')}
                 </span>
-                <span className="px-2.5 py-1 rounded-full bg-emerald-600/90 backdrop-blur text-white text-xs font-bold flex items-center gap-1">
+                <span className="px-2.5 py-1 rounded-full bg-[#D71920]/90 backdrop-blur text-white text-xs font-bold flex items-center gap-1">
                   <ShieldCheck className="w-3.5 h-3.5" />
                   <span>Verified AP Vehicle</span>
                 </span>
@@ -187,7 +190,7 @@ export default function CarDetailsPage() {
                   <button
                     key={img.id || idx}
                     onClick={() => setActiveImageIndex(idx)}
-                    className={`relative w-20 h-16 rounded-xl overflow-hidden border-2 transition shrink-0 ${activeImageIndex === idx ? 'border-emerald-600 scale-105 shadow-md' : 'border-transparent opacity-70 hover:opacity-100'}`}
+                    className={`relative w-20 h-16 rounded-xl overflow-hidden border-2 transition shrink-0 ${activeImageIndex === idx ? 'border-[#D71920] scale-105 shadow-md' : 'border-transparent opacity-70 hover:opacity-100'}`}
                   >
                     <img src={img.image_url} alt="thumbnail" className="w-full h-full object-cover" />
                   </button>
@@ -205,7 +208,7 @@ export default function CarDetailsPage() {
                   <span>•</span>
                   <span>Reg: <strong className="text-slate-800">{car.registration_number}</strong></span>
                   <span>•</span>
-                  <span className="text-emerald-700 font-bold">Proddatur, AP</span>
+                  <span className="text-[#b8141a] font-bold">Proddatur, AP</span>
                 </div>
                 <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
                   {car.brand} {car.model} <span className="font-normal text-slate-500 text-xl">{car.variant}</span>
@@ -225,7 +228,7 @@ export default function CarDetailsPage() {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <div className="bg-slate-50 rounded-2xl p-3.5 border border-slate-100 space-y-1">
                 <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                  <Fuel className="w-4 h-4 text-emerald-600" />
+                  <Fuel className="w-4 h-4 text-[#D71920]" />
                   <span>Fuel Type</span>
                 </div>
                 <div className="font-bold text-sm text-slate-900 capitalize">{car.fuel_type}</div>
@@ -233,7 +236,7 @@ export default function CarDetailsPage() {
 
               <div className="bg-slate-50 rounded-2xl p-3.5 border border-slate-100 space-y-1">
                 <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                  <CarIcon className="w-4 h-4 text-emerald-600" />
+                  <CarIcon className="w-4 h-4 text-[#D71920]" />
                   <span>Transmission</span>
                 </div>
                 <div className="font-bold text-sm text-slate-900 capitalize">{car.transmission}</div>
@@ -241,7 +244,7 @@ export default function CarDetailsPage() {
 
               <div className="bg-slate-50 rounded-2xl p-3.5 border border-slate-100 space-y-1">
                 <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                  <Users className="w-4 h-4 text-emerald-600" />
+                  <Users className="w-4 h-4 text-[#D71920]" />
                   <span>Capacity</span>
                 </div>
                 <div className="font-bold text-sm text-slate-900">{car.seating_capacity} Seater</div>
@@ -249,7 +252,7 @@ export default function CarDetailsPage() {
 
               <div className="bg-slate-50 rounded-2xl p-3.5 border border-slate-100 space-y-1">
                 <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                  <Gauge className="w-4 h-4 text-emerald-600" />
+                  <Gauge className="w-4 h-4 text-[#D71920]" />
                   <span>Mileage / KM</span>
                 </div>
                 <div className="font-bold text-sm text-slate-900">{car.mileage_kmpl ? `${car.mileage_kmpl} kmpl` : '20 kmpl'}</div>
@@ -268,7 +271,7 @@ export default function CarDetailsPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 {car.features.map((feat, idx) => (
                   <div key={idx} className="flex items-center gap-2 text-xs font-medium text-slate-700">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-[#D71920] shrink-0" />
                     <span>{feat}</span>
                   </div>
                 ))}
@@ -277,13 +280,13 @@ export default function CarDetailsPage() {
 
             {/* Host / Owner Info */}
             <div className="pt-6 border-t border-slate-100 flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-base">
+              <div className="w-12 h-12 rounded-full bg-red-100 text-red-900 flex items-center justify-center font-bold text-base">
                 RR
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2">
                   <h4 className="font-bold text-sm text-slate-900">Hosted by Ramesh Reddy</h4>
-                  <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">KYC Approved</span>
+                  <span className="px-2 py-0.5 rounded-full bg-red-100 text-red-900 text-[10px] font-bold">KYC Approved</span>
                 </div>
                 <p className="text-xs text-slate-500">Verified Proddatur Car Host • 100% On-time handover rate</p>
               </div>
@@ -294,7 +297,7 @@ export default function CarDetailsPage() {
           <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 space-y-6">
             <div className="flex items-center justify-between">
               <h3 className="font-extrabold text-lg text-slate-900">Customer Ratings & Reviews</h3>
-              <span className="text-xs font-semibold text-emerald-600">Only verified completed rentals</span>
+              <span className="text-xs font-semibold text-[#D71920]">Only verified completed rentals</span>
             </div>
 
             <div className="space-y-4">
@@ -305,7 +308,7 @@ export default function CarDetailsPage() {
                   <div key={rev.id} className="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-2">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-emerald-600 text-white text-xs font-bold flex items-center justify-center">
+                        <div className="w-8 h-8 rounded-full bg-[#D71920] text-white text-xs font-bold flex items-center justify-center">
                           {rev.customer?.full_name?.charAt(0) || 'C'}
                         </div>
                         <div>
@@ -340,15 +343,15 @@ export default function CarDetailsPage() {
                 <span className="text-xs font-semibold text-slate-500"> / day</span>
               </div>
               <div className="text-right">
-                <span className="text-xs font-bold text-emerald-600 block">Security Deposit: {formatCurrency(car.security_deposit)}</span>
+                <span className="text-xs font-bold text-[#D71920] block">Security Deposit: {formatCurrency(car.security_deposit)}</span>
                 <span className="text-[10px] text-slate-400 font-medium">(100% Refundable)</span>
               </div>
             </div>
 
             {/* Availability Indicator */}
             {isCarAvailable ? (
-              <div className="bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-xl p-3 text-xs font-semibold flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+              <div className="bg-red-50 text-red-900 border border-red-200 rounded-xl p-3 text-xs font-semibold flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-[#D71920] shrink-0" />
                 <span>Available for your selected rental period in Proddatur!</span>
               </div>
             ) : (
@@ -359,6 +362,38 @@ export default function CarDetailsPage() {
             )}
 
             <form onSubmit={handleProceedToBooking} className="space-y-4">
+              {/* Rental Mode: Self-Drive vs With Chauffeur */}
+              <div className="space-y-1.5">
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                  Rental Type / Mode
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setRentalType('self_drive')}
+                    className={`p-3 rounded-2xl border text-left transition flex flex-col justify-between ${rentalType === 'self_drive' ? 'bg-[#111111] text-white border-[#111111] shadow-md' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'}`}
+                  >
+                    <div className="flex items-center justify-between w-full">
+                      <span className="font-extrabold text-xs">🚗 Self-Drive</span>
+                      {rentalType === 'self_drive' && <span className="w-2 h-2 rounded-full bg-[#D71920]" />}
+                    </div>
+                    <span className="text-[10px] opacity-70 mt-0.5">Drive yourself (DL req.)</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setRentalType('with_driver')}
+                    className={`p-3 rounded-2xl border text-left transition flex flex-col justify-between ${rentalType === 'with_driver' ? 'bg-[#D71920] text-white border-[#D71920] shadow-md shadow-[#D71920]/25' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'}`}
+                  >
+                    <div className="flex items-center justify-between w-full">
+                      <span className="font-extrabold text-xs">👔 With Driver</span>
+                      {rentalType === 'with_driver' && <span className="w-2 h-2 rounded-full bg-white" />}
+                    </div>
+                    <span className="text-[10px] opacity-90 mt-0.5">+₹500/day (Relaxed trip)</span>
+                  </button>
+                </div>
+              </div>
+
               
               {/* Pickup Hub Selector */}
               <div className="space-y-1.5">
@@ -438,7 +473,7 @@ export default function CarDetailsPage() {
                       type="checkbox"
                       checked={deliveryRequested}
                       onChange={(e) => setDeliveryRequested(e.target.checked)}
-                      className="w-4 h-4 rounded text-emerald-600 accent-emerald-600 cursor-pointer"
+                      className="w-4 h-4 rounded text-[#D71920] accent-[#D71920] cursor-pointer"
                     />
                     <span>Request Doorstep Delivery (+{formatCurrency(car.delivery_charges)})</span>
                   </label>
@@ -505,7 +540,7 @@ export default function CarDetailsPage() {
               <button
                 type="submit"
                 disabled={bookingLoading || !isCarAvailable}
-                className="w-full py-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-extrabold text-sm shadow-xl shadow-emerald-600/30 transition flex items-center justify-center gap-2"
+                className="w-full py-4 rounded-2xl bg-[#D71920] hover:bg-[#b8141a] disabled:opacity-50 disabled:cursor-not-allowed text-white font-extrabold text-sm shadow-xl shadow-[#D71920]/30 transition flex items-center justify-center gap-2"
               >
                 <Lock className="w-4 h-4" />
                 <span>{bookingLoading ? 'Reserving...' : 'Proceed to Secure Checkout'}</span>

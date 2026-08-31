@@ -1,8 +1,8 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { MapPin, Calendar, Clock, Search } from 'lucide-react';
+import { MapPin, Calendar, Clock, Search, UserCheck } from 'lucide-react';
 import { useMarketplace } from '@/lib/mock-data/client-store';
 
 export default function SearchBar({ compact = false }: { compact?: boolean }) {
@@ -17,6 +17,7 @@ export default function SearchBar({ compact = false }: { compact?: boolean }) {
   returnDate.setDate(returnDate.getDate() + 3);
   const returnDateDefault = returnDate.toISOString().split('T')[0];
 
+  const [rentalType, setRentalType] = useState<'self_drive' | 'with_driver'>('self_drive');
   const [selectedLocation, setSelectedLocation] = useState(locations[0]?.id || '');
   const [pickupDate, setPickupDate] = useState(startDateDefault);
   const [pickupTime, setPickupTime] = useState('10:00');
@@ -26,6 +27,7 @@ export default function SearchBar({ compact = false }: { compact?: boolean }) {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     const query = new URLSearchParams({
+      rentalType,
       location: selectedLocation,
       pickupDate,
       pickupTime,
@@ -39,13 +41,43 @@ export default function SearchBar({ compact = false }: { compact?: boolean }) {
   return (
     <form 
       onSubmit={handleSearch}
-      className={`bg-white rounded-2xl shadow-2xl border border-slate-200/90 p-4 ${compact ? 'max-w-4xl' : 'max-w-5xl'} mx-auto`}
+      className={`bg-white rounded-3xl shadow-2xl border border-slate-200/90 p-4 sm:p-5 ${compact ? 'max-w-4xl' : 'max-w-5xl'} mx-auto font-montserrat space-y-4`}
     >
+      {/* Top Rental Type Tabs */}
+      <div className="flex items-center gap-2 pb-1 border-b border-slate-100">
+        <button
+          type="button"
+          onClick={() => setRentalType('self_drive')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition ${
+            rentalType === 'self_drive'
+              ? 'bg-[#111111] text-white shadow-sm'
+              : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
+          }`}
+        >
+          <span>🚗 Self-Drive</span>
+          {rentalType === 'self_drive' && <span className="w-1.5 h-1.5 rounded-full bg-[#D71920]" />}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setRentalType('with_driver')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition ${
+            rentalType === 'with_driver'
+              ? 'bg-[#D71920] text-white shadow-sm shadow-[#D71920]/25'
+              : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
+          }`}
+        >
+          <UserCheck className="w-3.5 h-3.5" />
+          <span>With Driver (+₹500/day)</span>
+        </button>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
         
-        <div className="md:col-span-4 bg-slate-50 hover:bg-slate-100/80 transition rounded-xl p-3 border border-slate-200">
+        {/* Pickup Hub */}
+        <div className="md:col-span-4 bg-slate-50 hover:bg-slate-100/80 transition rounded-2xl p-3 border border-slate-200">
           <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1 flex items-center gap-1.5">
-            <MapPin className="w-3.5 h-3.5 text-red-600" />
+            <MapPin className="w-3.5 h-3.5 text-[#D71920]" />
             <span>Pickup Hub in Proddatur</span>
           </label>
           <select
@@ -61,9 +93,10 @@ export default function SearchBar({ compact = false }: { compact?: boolean }) {
           </select>
         </div>
 
-        <div className="md:col-span-3 bg-slate-50 hover:bg-slate-100/80 transition rounded-xl p-3 border border-slate-200">
+        {/* Pickup Date & Time */}
+        <div className="md:col-span-3 bg-slate-50 hover:bg-slate-100/80 transition rounded-2xl p-3 border border-slate-200">
           <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1 flex items-center gap-1.5">
-            <Calendar className="w-3.5 h-3.5 text-red-600" />
+            <Calendar className="w-3.5 h-3.5 text-[#D71920]" />
             <span>Pickup Date & Time</span>
           </label>
           <div className="flex items-center gap-2">
@@ -82,9 +115,10 @@ export default function SearchBar({ compact = false }: { compact?: boolean }) {
           </div>
         </div>
 
-        <div className="md:col-span-3 bg-slate-50 hover:bg-slate-100/80 transition rounded-xl p-3 border border-slate-200">
+        {/* Return Date & Time */}
+        <div className="md:col-span-3 bg-slate-50 hover:bg-slate-100/80 transition rounded-2xl p-3 border border-slate-200">
           <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1 flex items-center gap-1.5">
-            <Clock className="w-3.5 h-3.5 text-red-600" />
+            <Clock className="w-3.5 h-3.5 text-[#D71920]" />
             <span>Return Date & Time</span>
           </label>
           <div className="flex items-center gap-2">
@@ -103,10 +137,11 @@ export default function SearchBar({ compact = false }: { compact?: boolean }) {
           </div>
         </div>
 
+        {/* Find Cars CTA */}
         <div className="md:col-span-2">
           <button
             type="submit"
-            className="w-full h-full min-h-[52px] rounded-xl bg-red-600 hover:bg-red-700 active:scale-[0.98] transition font-black text-sm text-white shadow-lg shadow-red-600/30 flex items-center justify-center gap-2"
+            className="w-full h-full min-h-[52px] rounded-2xl bg-[#D71920] hover:bg-[#b8141a] active:scale-[0.98] transition font-black text-sm text-white shadow-lg shadow-[#D71920]/30 flex items-center justify-center gap-2"
           >
             <Search className="w-4 h-4" />
             <span>Find Cars</span>

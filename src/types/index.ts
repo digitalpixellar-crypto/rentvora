@@ -113,6 +113,7 @@ export interface BookingQuote {
   duration_days: number;
   base_rental_amount: number;
   delivery_amount: number;
+  driver_allowance_amount: number;
   taxes_fees_amount: number;
   security_deposit_amount: number;
   platform_commission_amount: number;

@@ -30,7 +30,7 @@ export default function BookingConfirmationPage() {
     return (
       <div className="max-w-xl mx-auto px-4 py-20 text-center space-y-4">
         <h2 className="text-2xl font-bold text-slate-900">Booking Not Found</h2>
-        <Link href="/cars" className="inline-block px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold">
+        <Link href="/cars" className="inline-block px-4 py-2 rounded-xl bg-[#D71920] text-white text-xs font-bold">
           Back to Marketplace
         </Link>
       </div>
@@ -47,14 +47,14 @@ export default function BookingConfirmationPage() {
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
       
       {/* Success Badge Banner */}
-      <div className="bg-emerald-600 rounded-3xl p-8 text-white text-center space-y-4 shadow-xl shadow-emerald-600/20">
+      <div className="bg-[#D71920] rounded-3xl p-8 text-white text-center space-y-4 shadow-xl shadow-[#D71920]/20">
         <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur flex items-center justify-center mx-auto text-white">
           <CheckCircle className="w-10 h-10 text-white" />
         </div>
         <div className="space-y-1">
-          <span className="text-xs font-bold uppercase tracking-widest text-emerald-200">Payment Successful & Confirmed</span>
+          <span className="text-xs font-bold uppercase tracking-widest text-red-200">Payment Successful & Confirmed</span>
           <h1 className="text-2xl sm:text-4xl font-black">Your Car is Ready to Drive!</h1>
-          <p className="text-sm text-emerald-100 max-w-md mx-auto">
+          <p className="text-sm text-red-100 max-w-md mx-auto">
             Booking Reference: <strong className="text-white underline">{booking.booking_reference}</strong>
           </p>
         </div>
@@ -67,7 +67,7 @@ export default function BookingConfirmationPage() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-6 border-b border-slate-200">
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-black text-2xl tracking-tight text-slate-900">RENT<span className="text-emerald-600">VORA</span></span>
+              <span className="font-black text-2xl tracking-tight text-slate-900">RENT<span className="text-[#D71920]">VORA</span></span>
               <span className="text-xs px-2 py-0.5 rounded bg-slate-100 text-slate-600 font-semibold">TAX INVOICE</span>
             </div>
             <p className="text-xs text-slate-400 mt-0.5">GSTIN: 37AAECP1298K1Z3 • Proddatur, Andhra Pradesh</p>
@@ -76,7 +76,7 @@ export default function BookingConfirmationPage() {
           <div className="text-left sm:text-right text-xs text-slate-500 space-y-0.5">
             <div>Booking Ref: <strong className="text-slate-900">{booking.booking_reference}</strong></div>
             <div>Date: {formatDateTime(booking.created_at)}</div>
-            <div>Status: <span className="text-emerald-600 font-bold uppercase">CONFIRMED (PAID)</span></div>
+            <div>Status: <span className="text-[#D71920] font-bold uppercase">CONFIRMED (PAID)</span></div>
           </div>
         </div>
 
@@ -106,6 +106,7 @@ export default function BookingConfirmationPage() {
               <div className="text-slate-400 text-xs font-medium">Vehicle</div>
               <div className="font-bold text-slate-900 text-sm">{booking.car?.brand} {booking.car?.model}</div>
               <div className="text-xs text-slate-500">{booking.car?.registration_number} • {booking.car?.fuel_type}</div>
+              <div className="text-[11px] font-bold text-[#D71920] mt-1 uppercase">Mode: {booking.rental_type === "with_driver" ? "👔 With Chauffeur / Driver" : "🚗 Self-Drive"}</div>
             </div>
 
             <div className="p-4 rounded-xl border border-slate-200 space-y-1">
@@ -148,7 +149,7 @@ export default function BookingConfirmationPage() {
                 <td className="py-2.5">Applicable Taxes & GST (5%)</td>
                 <td className="py-2.5 text-right font-semibold text-slate-900">{formatCurrency(booking.taxes_fees_amount)}</td>
               </tr>
-              <tr className="text-emerald-700 font-medium">
+              <tr className="text-[#b8141a] font-medium">
                 <td className="py-2.5">Refundable Security Deposit (100% Returnable)</td>
                 <td className="py-2.5 text-right font-bold">{formatCurrency(booking.security_deposit_amount)}</td>
               </tr>
@@ -186,7 +187,7 @@ export default function BookingConfirmationPage() {
 
           <Link
             href="/customer/dashboard"
-            className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center gap-2 shadow-lg shadow-emerald-600/30"
+            className="px-6 py-2.5 rounded-xl bg-[#D71920] hover:bg-[#b8141a] text-white text-xs font-bold transition flex items-center gap-2 shadow-lg shadow-[#D71920]/30"
           >
             <span>Go to Customer Dashboard</span>
             <ArrowRight className="w-4 h-4" />

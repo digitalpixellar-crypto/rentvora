@@ -38,7 +38,7 @@ export default function CheckoutPage() {
       <div className="max-w-xl mx-auto px-4 py-20 text-center space-y-4">
         <h2 className="text-2xl font-bold text-slate-900">Booking Not Found</h2>
         <p className="text-sm text-slate-500">This reservation session could not be found or has expired.</p>
-        <Link href="/cars" className="inline-block px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold">
+        <Link href="/cars" className="inline-block px-4 py-2 rounded-xl bg-[#D71920] text-white text-xs font-bold">
           Return to Cars Marketplace
         </Link>
       </div>
@@ -66,11 +66,11 @@ export default function CheckoutPage() {
       
       {/* Header */}
       <div className="flex items-center justify-between pb-4 border-b border-slate-200">
-        <Link href={`/cars/${booking.car?.slug || ''}`} className="flex items-center gap-1 text-xs font-bold text-slate-600 hover:text-emerald-600">
+        <Link href={`/cars/${booking.car?.slug || ''}`} className="flex items-center gap-1 text-xs font-bold text-slate-600 hover:text-[#D71920]">
           <ArrowLeft className="w-4 h-4" />
           <span>Back to Car Details</span>
         </Link>
-        <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
+        <div className="flex items-center gap-1.5 text-xs font-bold text-[#b8141a] bg-red-50 px-3 py-1 rounded-full border border-red-200">
           <Lock className="w-3.5 h-3.5" />
           <span>Cashfree 256-Bit Secure PG</span>
         </div>
@@ -95,10 +95,10 @@ export default function CheckoutPage() {
               {/* UPI Option */}
               <div 
                 onClick={() => setPaymentMethod('UPI')}
-                className={`p-4 rounded-2xl border-2 transition cursor-pointer flex items-center justify-between ${paymentMethod === 'UPI' ? 'border-emerald-600 bg-emerald-50/50 shadow-sm' : 'border-slate-200 hover:border-slate-300'}`}
+                className={`p-4 rounded-2xl border-2 transition cursor-pointer flex items-center justify-between ${paymentMethod === 'UPI' ? 'border-[#D71920] bg-red-50/50 shadow-sm' : 'border-slate-200 hover:border-slate-300'}`}
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold">
+                  <div className="w-10 h-10 rounded-xl bg-red-100 text-emerald-800 flex items-center justify-center font-bold">
                     <Smartphone className="w-5 h-5" />
                   </div>
                   <div>
@@ -106,8 +106,8 @@ export default function CheckoutPage() {
                     <div className="text-xs text-slate-500">Google Pay, PhonePe, Paytm, BHIM UPI</div>
                   </div>
                 </div>
-                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${paymentMethod === 'UPI' ? 'border-emerald-600' : 'border-slate-300'}`}>
-                  {paymentMethod === 'UPI' && <div className="w-2.5 h-2.5 rounded-full bg-emerald-600" />}
+                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${paymentMethod === 'UPI' ? 'border-[#D71920]' : 'border-slate-300'}`}>
+                  {paymentMethod === 'UPI' && <div className="w-2.5 h-2.5 rounded-full bg-[#D71920]" />}
                 </div>
               </div>
 
@@ -129,7 +129,7 @@ export default function CheckoutPage() {
               {/* Cards Option */}
               <div 
                 onClick={() => setPaymentMethod('CARD')}
-                className={`p-4 rounded-2xl border-2 transition cursor-pointer flex items-center justify-between ${paymentMethod === 'CARD' ? 'border-emerald-600 bg-emerald-50/50 shadow-sm' : 'border-slate-200 hover:border-slate-300'}`}
+                className={`p-4 rounded-2xl border-2 transition cursor-pointer flex items-center justify-between ${paymentMethod === 'CARD' ? 'border-[#D71920] bg-red-50/50 shadow-sm' : 'border-slate-200 hover:border-slate-300'}`}
               >
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-800 flex items-center justify-center font-bold">
@@ -140,15 +140,15 @@ export default function CheckoutPage() {
                     <div className="text-xs text-slate-500">Visa, MasterCard, RuPay, Maestro</div>
                   </div>
                 </div>
-                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${paymentMethod === 'CARD' ? 'border-emerald-600' : 'border-slate-300'}`}>
-                  {paymentMethod === 'CARD' && <div className="w-2.5 h-2.5 rounded-full bg-emerald-600" />}
+                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${paymentMethod === 'CARD' ? 'border-[#D71920]' : 'border-slate-300'}`}>
+                  {paymentMethod === 'CARD' && <div className="w-2.5 h-2.5 rounded-full bg-[#D71920]" />}
                 </div>
               </div>
 
               {/* NetBanking Option */}
               <div 
                 onClick={() => setPaymentMethod('NETBANKING')}
-                className={`p-4 rounded-2xl border-2 transition cursor-pointer flex items-center justify-between ${paymentMethod === 'NETBANKING' ? 'border-emerald-600 bg-emerald-50/50 shadow-sm' : 'border-slate-200 hover:border-slate-300'}`}
+                className={`p-4 rounded-2xl border-2 transition cursor-pointer flex items-center justify-between ${paymentMethod === 'NETBANKING' ? 'border-[#D71920] bg-red-50/50 shadow-sm' : 'border-slate-200 hover:border-slate-300'}`}
               >
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-800 flex items-center justify-center font-bold">
@@ -159,8 +159,8 @@ export default function CheckoutPage() {
                     <div className="text-xs text-slate-500">SBI, HDFC, ICICI, Axis, Andhra Bank</div>
                   </div>
                 </div>
-                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${paymentMethod === 'NETBANKING' ? 'border-emerald-600' : 'border-slate-300'}`}>
-                  {paymentMethod === 'NETBANKING' && <div className="w-2.5 h-2.5 rounded-full bg-emerald-600" />}
+                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${paymentMethod === 'NETBANKING' ? 'border-[#D71920]' : 'border-slate-300'}`}>
+                  {paymentMethod === 'NETBANKING' && <div className="w-2.5 h-2.5 rounded-full bg-[#D71920]" />}
                 </div>
               </div>
             </div>
@@ -176,14 +176,14 @@ export default function CheckoutPage() {
             <button
               onClick={handlePayNow}
               disabled={processing}
-              className="w-full py-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white font-extrabold text-sm shadow-xl shadow-emerald-600/30 transition flex items-center justify-center gap-2"
+              className="w-full py-4 rounded-2xl bg-[#D71920] hover:bg-[#b8141a] disabled:opacity-60 text-white font-extrabold text-sm shadow-xl shadow-[#D71920]/30 transition flex items-center justify-center gap-2"
             >
               <Lock className="w-4 h-4" />
               <span>{processing ? 'Processing Cashfree Payment...' : `Pay ${formatCurrency(booking.total_amount)} Securely`}</span>
             </button>
 
             <div className="flex items-center justify-center gap-4 text-xs text-slate-400 font-medium">
-              <span className="flex items-center gap-1"><ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> 100% Refund Guarantee</span>
+              <span className="flex items-center gap-1"><ShieldCheck className="w-3.5 h-3.5 text-[#D71920]" /> 100% Refund Guarantee</span>
               <span>•</span>
               <span>Encrypted Transaction</span>
             </div>
@@ -207,7 +207,7 @@ export default function CheckoutPage() {
               <div>
                 <div className="font-bold text-sm text-slate-900">{booking.car?.brand} {booking.car?.model}</div>
                 <div className="text-xs text-slate-500">Reg: {booking.car?.registration_number}</div>
-                <div className="text-[11px] font-bold text-emerald-600 capitalize">{booking.car?.category.replace('_', ' ')} • {booking.car?.transmission}</div>
+                <div className="text-[11px] font-bold text-[#D71920] capitalize">{booking.car?.category.replace('_', ' ')} • {booking.car?.transmission}</div>
               </div>
             </div>
 
@@ -253,7 +253,7 @@ export default function CheckoutPage() {
                 <span>Taxes & GST (5%)</span>
                 <span className="font-semibold text-slate-900">{formatCurrency(booking.taxes_fees_amount)}</span>
               </div>
-              <div className="flex justify-between text-emerald-700 font-medium pt-2 border-t border-slate-100">
+              <div className="flex justify-between text-[#b8141a] font-medium pt-2 border-t border-slate-100">
                 <span>Refundable Security Deposit</span>
                 <span className="font-bold">{formatCurrency(booking.security_deposit_amount)}</span>
               </div>
