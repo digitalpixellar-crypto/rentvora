@@ -12,10 +12,12 @@ import {
   FileText, 
   X, 
   CheckCircle,
-  MapPin
+  MapPin,
+  MessageCircle
 } from 'lucide-react';
 import { useMarketplace } from '@/lib/mock-data/client-store';
 import { formatCurrency, formatDateTime } from '@/lib/utils/formatters';
+import { createWhatsAppUrl, generateHostBookingWhatsAppMessage } from '@/lib/utils/whatsapp';
 import { Booking } from '@/types';
 
 export default function CustomerDashboardPage() {
@@ -144,7 +146,16 @@ export default function CustomerDashboardPage() {
                       <span className="text-xs text-slate-400 block">Total Amount</span>
                       <span className="text-xl font-black text-slate-950">{formatCurrency(b.total_amount)}</span>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2 justify-end">
+                      <a
+                        href={createWhatsAppUrl(b.owner?.phone || '+91 98490 12345', generateHostBookingWhatsAppMessage(b))}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-3 py-1.5 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white text-xs font-bold flex items-center gap-1 shadow-sm"
+                      >
+                        <MessageCircle className="w-3.5 h-3.5" />
+                        <span>WhatsApp Host</span>
+                      </a>
                       <Link href={`/booking-confirmation/${b.id}`} className="px-3 py-1.5 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold flex items-center gap-1">
                         <FileText className="w-3.5 h-3.5" />
                         <span>Receipt</span>

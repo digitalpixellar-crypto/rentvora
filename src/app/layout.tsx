@@ -1,9 +1,10 @@
-﻿import type { Metadata, Viewport } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Montserrat } from 'next/font/google';
 import './globals.css';
 import Navbar from '@/components/common/Navbar';
 import Footer from '@/components/common/Footer';
 import PwaInstallPrompt from '@/components/common/PwaInstallPrompt';
+import WhatsAppWidget from '@/components/common/WhatsAppWidget';
 import { MarketplaceProvider } from '@/lib/mock-data/client-store';
 
 const montserrat = Montserrat({
@@ -58,6 +59,7 @@ export default function RootLayout({
           </main>
           <Footer />
           <PwaInstallPrompt />
+          <WhatsAppWidget />
         </MarketplaceProvider>
       </body>
     </html>

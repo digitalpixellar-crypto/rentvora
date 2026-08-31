@@ -14,10 +14,12 @@ import {
   ShieldCheck, 
   ArrowRight,
   Download,
-  AlertCircle
+  AlertCircle,
+  MessageCircle
 } from 'lucide-react';
 import { useMarketplace } from '@/lib/mock-data/client-store';
 import { formatCurrency, formatDateTime } from '@/lib/utils/formatters';
+import { createWhatsAppUrl, generateHostBookingWhatsAppMessage } from '@/lib/utils/whatsapp';
 
 export default function BookingConfirmationPage() {
   const params = useParams();
@@ -177,19 +179,31 @@ export default function BookingConfirmationPage() {
 
         {/* Actions */}
         <div className="pt-4 flex flex-wrap items-center justify-between gap-4 print:hidden">
-          <button
-            onClick={handlePrint}
-            className="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition flex items-center gap-2"
-          >
-            <Printer className="w-4 h-4" />
-            <span>Print / Save PDF Receipt</span>
-          </button>
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              onClick={handlePrint}
+              className="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition flex items-center gap-2"
+            >
+              <Printer className="w-4 h-4" />
+              <span>Print / Save PDF Receipt</span>
+            </button>
+
+            <a
+              href={createWhatsAppUrl(booking.owner?.phone || '+91 98490 12345', generateHostBookingWhatsAppMessage(booking))}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-5 py-2.5 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white text-xs font-bold transition flex items-center gap-2 shadow-md shadow-[#25D366]/25"
+            >
+              <MessageCircle className="w-4 h-4" />
+              <span>Connect on WhatsApp</span>
+            </a>
+          </div>
 
           <Link
             href="/customer/dashboard"
             className="px-6 py-2.5 rounded-xl bg-[#D71920] hover:bg-[#b8141a] text-white text-xs font-bold transition flex items-center gap-2 shadow-lg shadow-[#D71920]/30"
           >
-            <span>Go to Customer Dashboard</span>
+            <span>Go to Dashboard</span>
             <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
