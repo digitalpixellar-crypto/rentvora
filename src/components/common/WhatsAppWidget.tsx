@@ -7,7 +7,7 @@ import { createWhatsAppUrl, generateCustomerSupportWhatsAppMessage } from '@/lib
 
 export default function WhatsAppWidget() {
   const [isOpen, setIsOpen] = useState(false);
-  const supportPhone = APP_CONFIG.supportPhone || '+91 98490 12345';
+  const supportPhone = APP_CONFIG.supportPhone || '+91 78938 17322';
 
   const handleQuickChat = (topic: string) => {
     const message = generateCustomerSupportWhatsAppMessage(topic);

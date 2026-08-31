@@ -95,7 +95,7 @@ export default function BookingConfirmationPage() {
             <span className="font-bold text-slate-400 uppercase tracking-wider block text-[10px]">Host & Pickup Location</span>
             <div className="font-bold text-slate-900 text-sm">Ramesh Reddy (Verified Host)</div>
             <div className="text-slate-600">Pickup: {booking.pickup_location?.area_locality} ({booking.pickup_location?.pickup_point_name})</div>
-            <div className="text-slate-600">Host Contact: +91 98490 12345</div>
+            <div className="text-slate-600">Host Contact: +91 78938 17322</div>
           </div>
         </div>
 
@@ -189,7 +189,7 @@ export default function BookingConfirmationPage() {
             </button>
 
             <a
-              href={createWhatsAppUrl(booking.owner?.phone || '+91 98490 12345', generateHostBookingWhatsAppMessage(booking))}
+              href={createWhatsAppUrl(booking.owner?.phone || '+91 78938 17322', generateHostBookingWhatsAppMessage(booking))}
               target="_blank"
               rel="noopener noreferrer"
               className="px-5 py-2.5 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white text-xs font-bold transition flex items-center gap-2 shadow-md shadow-[#25D366]/25"

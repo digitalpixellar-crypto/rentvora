@@ -3,7 +3,7 @@ export const APP_CONFIG = {
   tagline: "Self-Drive Car Rentals in Proddatur & Andhra Pradesh",
   defaultCity: "Proddatur",
   defaultState: "Andhra Pradesh",
-  supportPhone: "+91 98765 43210",
+  supportPhone: "+91 78938 17322",
   supportEmail: "support@rentvora.com",
   adminEmail: "admin@rentvora.com",
   defaultCommissionRate: 10.0, // 10%

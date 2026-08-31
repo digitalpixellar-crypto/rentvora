@@ -8,7 +8,7 @@ export const INITIAL_OWNERS: (Profile & { owner_profile: OwnerProfile })[] = [
     id: "usr-owner-1",
     email: "ramesh.cars@gmail.com",
     full_name: "Ramesh Reddy",
-    phone: "+91 98490 12345",
+    phone: "+91 78938 17322",
     role: "owner",
     status: "active",
     avatar_url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80",

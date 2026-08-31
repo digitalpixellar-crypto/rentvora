@@ -148,7 +148,7 @@ export default function CustomerDashboardPage() {
                     </div>
                     <div className="flex flex-wrap gap-2 justify-end">
                       <a
-                        href={createWhatsAppUrl(b.owner?.phone || '+91 98490 12345', generateHostBookingWhatsAppMessage(b))}
+                        href={createWhatsAppUrl(b.owner?.phone || '+91 78938 17322', generateHostBookingWhatsAppMessage(b))}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="px-3 py-1.5 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white text-xs font-bold flex items-center gap-1 shadow-sm"
