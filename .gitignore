@@ -1,0 +1,58 @@
+﻿# dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# local env files
+.env*.local
+.env
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# temporary setup scripts
+setup_configs.js
+generate_migrations.js
+gen_types.js
+gen_lib.js
+gen_services.js
+gen_mock.js
+gen_client_store.js
+gen_common_components.js
+gen_marketplace_components.js
+gen_pages_home.js
+gen_cars_pages.js
+gen_checkout_pages.js
+write_customer.js
+write_part1.js
+write_part2.js
+write_part3.js
+write_part4.js
+rename_brand.js
+update_brand_styling.js
+update_brand_1.js
+update_brand_2.js
+update_brand_3.js
