@@ -114,6 +114,8 @@ export interface BookingQuote {
   base_rental_amount: number;
   delivery_amount: number;
   driver_allowance_amount: number;
+  discount_amount: number;
+  coupon_code?: string;
   taxes_fees_amount: number;
   security_deposit_amount: number;
   platform_commission_amount: number;

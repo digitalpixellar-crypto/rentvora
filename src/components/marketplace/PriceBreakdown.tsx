@@ -1,7 +1,7 @@
 import React from 'react';
 import { BookingQuote } from '@/types';
 import { formatCurrency } from '@/lib/utils/formatters';
-import { ShieldCheck, Info, UserCheck } from 'lucide-react';
+import { ShieldCheck, Info, UserCheck, Tag, Sparkles } from 'lucide-react';
 
 export default function PriceBreakdown({ quote }: { quote: BookingQuote }) {
   return (
@@ -16,6 +16,17 @@ export default function PriceBreakdown({ quote }: { quote: BookingQuote }) {
           <span>Base Vehicle Rental</span>
           <span className="font-semibold text-slate-900">{formatCurrency(quote.base_rental_amount)}</span>
         </div>
+
+        {/* Applied Promo Code Discount */}
+        {quote.discount_amount > 0 && (
+          <div className="flex justify-between items-center text-emerald-800 font-semibold bg-emerald-50 p-2 rounded-xl border border-emerald-200">
+            <span className="flex items-center gap-1.5">
+              <Tag className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Promo Discount {quote.coupon_code ? `(${quote.coupon_code})` : ''}</span>
+            </span>
+            <span className="font-black text-emerald-700">-{formatCurrency(quote.discount_amount)}</span>
+          </div>
+        )}
 
         {quote.driver_allowance_amount > 0 && (
           <div className="flex justify-between items-center text-[#D71920] font-semibold bg-red-50/70 p-2 rounded-xl border border-red-200">

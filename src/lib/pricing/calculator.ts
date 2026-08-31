@@ -10,6 +10,8 @@ export interface PriceCalculationInput {
   deliveryRequested?: boolean;
   withDriver?: boolean;
   driverAllowancePerDay?: number;
+  discountAmount?: number;
+  couponCode?: string;
   startTime: string | Date;
   endTime: string | Date;
   customCommissionRate?: number;
@@ -49,20 +51,24 @@ export function calculateServerQuote(input: PriceCalculationInput): BookingQuote
     deliveryAmount = Number(input.deliveryCharges);
   }
 
-  // Tax (GST 5% on rental fare)
+  // Promo Discount
+  const discountAmount = Math.max(0, Math.min(Number(input.discountAmount || 0), baseRentalAmount));
+
+  // Tax (GST 5% on discounted rental fare)
+  const taxableFare = Math.max(0, baseRentalAmount - discountAmount);
   const taxRate = input.customTaxRate ?? APP_CONFIG.defaultTaxRate;
-  const taxesFeesAmount = Math.round((baseRentalAmount * taxRate) / 100);
+  const taxesFeesAmount = Math.round((taxableFare * taxRate) / 100);
 
   // Security deposit
   const securityDepositAmount = Number(input.securityDeposit || 2000);
 
   // Platform commission
   const commissionRate = input.customCommissionRate ?? APP_CONFIG.defaultCommissionRate;
-  const platformCommissionAmount = Math.round((baseRentalAmount * commissionRate) / 100);
-  const ownerEarningsAmount = (baseRentalAmount - platformCommissionAmount) + driverAllowanceAmount;
+  const platformCommissionAmount = Math.round((taxableFare * commissionRate) / 100);
+  const ownerEarningsAmount = (taxableFare - platformCommissionAmount) + driverAllowanceAmount;
 
   // Total payable now
-  const totalAmount = baseRentalAmount + deliveryAmount + driverAllowanceAmount + taxesFeesAmount + securityDepositAmount;
+  const totalAmount = (baseRentalAmount - discountAmount) + deliveryAmount + driverAllowanceAmount + taxesFeesAmount + securityDepositAmount;
 
   return {
     duration_hours: durationHours,
@@ -70,12 +76,14 @@ export function calculateServerQuote(input: PriceCalculationInput): BookingQuote
     base_rental_amount: baseRentalAmount,
     delivery_amount: deliveryAmount,
     driver_allowance_amount: driverAllowanceAmount,
+    discount_amount: discountAmount,
+    coupon_code: input.couponCode,
     taxes_fees_amount: taxesFeesAmount,
     security_deposit_amount: securityDepositAmount,
     platform_commission_amount: platformCommissionAmount,
     owner_earnings_amount: ownerEarningsAmount,
-    total_amount: totalAmount,
-    payable_now: totalAmount,
+    total_amount: Math.max(0, totalAmount),
+    payable_now: Math.max(0, totalAmount),
     refundable_deposit: securityDepositAmount,
   };
 }
