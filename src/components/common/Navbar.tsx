@@ -3,7 +3,19 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { MapPin, User, Menu, X, ChevronDown, Sparkles, Building2, KeyRound } from 'lucide-react';
+import { 
+  MapPin, 
+  User, 
+  Menu, 
+  X, 
+  ChevronDown, 
+  Sparkles, 
+  Building2, 
+  KeyRound, 
+  LogIn, 
+  ShieldCheck, 
+  LogOut 
+} from 'lucide-react';
 import { useMarketplace } from '@/lib/mock-data/client-store';
 import { UserRole } from '@/types';
 import Logo from './Logo';
@@ -12,14 +24,14 @@ export default function Navbar() {
   const pathname = usePathname();
   const { currentUser, setCurrentUserRole, locations } = useMarketplace();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [roleDropdownOpen, setRoleDropdownOpen] = useState(false);
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [selectedCity, setSelectedCity] = useState('Proddatur');
 
   const uniqueCities = Array.from(new Set(locations.map(l => l.city)));
 
   const handleRoleChange = (role: UserRole) => {
     setCurrentUserRole(role);
-    setRoleDropdownOpen(false);
+    setUserDropdownOpen(false);
   };
 
   return (
@@ -46,13 +58,13 @@ export default function Navbar() {
             </div>
           </div>
 
-          {/* 2. Center: Clean, Non-wrapping Navigation Links */}
+          {/* 2. Center: Clean Navigation Links */}
           <nav className="hidden lg:flex items-center gap-6 xl:gap-8 text-xs xl:text-sm font-semibold tracking-normal text-slate-700 whitespace-nowrap">
             <Link 
               href="/cars" 
               className={`transition-colors hover:text-[#D71920] ${pathname.startsWith('/cars') ? 'text-[#D71920] font-bold' : ''}`}
             >
-              Explore Cars
+              Explore Fleet
             </Link>
             <Link 
               href="/rent-a-car/proddatur" 
@@ -71,82 +83,118 @@ export default function Navbar() {
               className="flex items-center gap-1.5 text-slate-800 hover:text-[#D71920] font-semibold transition-colors"
             >
               <Building2 className="w-3.5 h-3.5 text-[#D71920]" />
-              <span>Host Portal</span>
+              <span>Host a Car</span>
             </Link>
           </nav>
 
-          {/* 3. Right: Persona Switcher & Primary Action */}
+          {/* 3. Right: Auth / Login & User Controls */}
           <div className="hidden md:flex items-center gap-3 shrink-0">
-            {/* Quick Persona Switcher for demonstration */}
+            
+            {/* Direct Login Button */}
+            <Link
+              href="/auth/login"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 hover:text-[#D71920] hover:bg-red-50/60 border border-slate-200 transition"
+            >
+              <LogIn className="w-4 h-4 text-[#D71920]" />
+              <span>Sign In / Login</span>
+            </Link>
+
+            {/* User Account / Role Menu */}
             <div className="relative">
               <button
-                onClick={() => setRoleDropdownOpen(!roleDropdownOpen)}
-                className="flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition whitespace-nowrap"
+                onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                className="flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-800 hover:bg-slate-100 transition whitespace-nowrap"
               >
-                <KeyRound className="w-3.5 h-3.5 text-[#D71920]" />
-                <span>Portal: <strong className="capitalize text-[#D71920] font-bold">{currentUser?.role || 'customer'}</strong></span>
-                <ChevronDown className="w-3 h-3 text-slate-400" />
+                <div className="w-6 h-6 rounded-full bg-[#111111] text-white flex items-center justify-center text-[10px] font-black">
+                  {currentUser?.full_name?.charAt(0) || 'U'}
+                </div>
+                <span className="font-bold text-xs">{currentUser?.full_name?.split(' ')[0] || 'Account'}</span>
+                <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
               </button>
 
-              {roleDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-slate-200 py-2 z-50 animate-in fade-in zoom-in-95">
-                  <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100">
-                    Switch Active Persona
+              {userDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-slate-200 py-2 z-50 animate-in fade-in zoom-in-95 font-montserrat">
+                  <div className="px-4 py-2.5 border-b border-slate-100 space-y-0.5">
+                    <div className="font-black text-xs text-slate-900">{currentUser?.full_name || 'Active User'}</div>
+                    <div className="text-[11px] text-slate-400 truncate">{currentUser?.email}</div>
+                    <div className="inline-block mt-1 px-2 py-0.5 rounded-full bg-red-50 text-[#D71920] text-[9px] font-bold uppercase tracking-wider">
+                      Role: {currentUser?.role || 'Customer'}
+                    </div>
                   </div>
-                  <button
-                    onClick={() => handleRoleChange('customer')}
-                    className="w-full text-left px-3 py-2 text-xs hover:bg-red-50 hover:text-[#D71920] flex items-center justify-between font-medium"
-                  >
-                    <span>Customer (Pavan Kalyan)</span>
-                    {currentUser?.role === 'customer' && <span className="w-2 h-2 rounded-full bg-[#D71920]" />}
-                  </button>
-                  <button
-                    onClick={() => handleRoleChange('owner')}
-                    className="w-full text-left px-3 py-2 text-xs hover:bg-red-50 hover:text-[#D71920] flex items-center justify-between font-medium"
-                  >
-                    <span>Car Host (Ramesh Reddy)</span>
-                    {currentUser?.role === 'owner' && <span className="w-2 h-2 rounded-full bg-[#D71920]" />}
-                  </button>
-                  <button
-                    onClick={() => handleRoleChange('admin')}
-                    className="w-full text-left px-3 py-2 text-xs hover:bg-red-50 hover:text-[#D71920] flex items-center justify-between font-medium"
-                  >
-                    <span>Admin Control Center</span>
-                    {currentUser?.role === 'admin' && <span className="w-2 h-2 rounded-full bg-[#D71920]" />}
-                  </button>
+
+                  <div className="py-1">
+                    <Link
+                      href="/customer/dashboard"
+                      onClick={() => setUserDropdownOpen(false)}
+                      className="px-4 py-2 text-xs text-slate-700 hover:bg-red-50 hover:text-[#D71920] flex items-center gap-2 font-medium"
+                    >
+                      <User className="w-3.5 h-3.5 text-[#D71920]" />
+                      <span>My Bookings</span>
+                    </Link>
+
+                    <Link
+                      href="/customer/profile"
+                      onClick={() => setUserDropdownOpen(false)}
+                      className="px-4 py-2 text-xs text-slate-700 hover:bg-red-50 hover:text-[#D71920] flex items-center gap-2 font-medium"
+                    >
+                      <ShieldCheck className="w-3.5 h-3.5 text-[#D71920]" />
+                      <span>KYC & License Profile</span>
+                    </Link>
+
+                    <Link
+                      href="/owner/dashboard"
+                      onClick={() => setUserDropdownOpen(false)}
+                      className="px-4 py-2 text-xs text-slate-700 hover:bg-red-50 hover:text-[#D71920] flex items-center gap-2 font-medium"
+                    >
+                      <Building2 className="w-3.5 h-3.5 text-[#D71920]" />
+                      <span>Host Dashboard</span>
+                    </Link>
+
+                    <Link
+                      href="/admin/dashboard"
+                      onClick={() => setUserDropdownOpen(false)}
+                      className="px-4 py-2 text-xs text-slate-700 hover:bg-red-50 hover:text-[#D71920] flex items-center gap-2 font-medium"
+                    >
+                      <KeyRound className="w-3.5 h-3.5 text-[#D71920]" />
+                      <span>Admin Control Center</span>
+                    </Link>
+                  </div>
+
+                  <div className="pt-1 border-t border-slate-100 px-1">
+                    <Link
+                      href="/auth/login"
+                      onClick={() => setUserDropdownOpen(false)}
+                      className="w-full px-3 py-2 text-xs text-slate-600 hover:bg-slate-100 rounded-xl flex items-center gap-2 font-semibold"
+                    >
+                      <LogOut className="w-3.5 h-3.5 text-slate-400" />
+                      <span>Switch Account / Sign In</span>
+                    </Link>
+                  </div>
                 </div>
               )}
             </div>
 
-            {/* Role-Specific CTA Button */}
-            {currentUser?.role === 'admin' ? (
-              <Link
-                href="/admin/dashboard"
-                className="px-4 py-2.5 rounded-xl bg-[#111111] text-white text-xs font-bold hover:bg-slate-800 transition whitespace-nowrap shadow-sm"
-              >
-                Admin Panel
-              </Link>
-            ) : currentUser?.role === 'owner' ? (
-              <Link
-                href="/owner/cars/add"
-                className="px-4 py-2.5 rounded-xl bg-[#D71920] text-white text-xs font-bold hover:bg-[#b8141a] transition shadow-md shadow-[#D71920]/25 flex items-center gap-1.5 whitespace-nowrap"
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>+ List Car</span>
-              </Link>
-            ) : (
-              <Link
-                href="/customer/dashboard"
-                className="px-4 py-2.5 rounded-xl bg-[#D71920] text-white text-xs font-bold hover:bg-[#b8141a] transition shadow-md shadow-[#D71920]/25 flex items-center gap-1.5 whitespace-nowrap"
-              >
-                <User className="w-3.5 h-3.5" />
-                <span>My Bookings</span>
-              </Link>
-            )}
+            {/* Primary Action Button */}
+            <Link
+              href="/customer/dashboard"
+              className="px-4 py-2.5 rounded-xl bg-[#D71920] text-white text-xs font-black hover:bg-[#b8141a] transition shadow-md shadow-[#D71920]/25 flex items-center gap-1.5 whitespace-nowrap"
+            >
+              <User className="w-3.5 h-3.5" />
+              <span>My Bookings</span>
+            </Link>
+
           </div>
 
           {/* Mobile menu trigger */}
           <div className="lg:hidden flex items-center gap-2">
+            <Link
+              href="/auth/login"
+              className="px-3 py-1.5 rounded-xl bg-red-50 text-[#D71920] text-xs font-bold flex items-center gap-1 border border-red-200"
+            >
+              <LogIn className="w-3.5 h-3.5" />
+              <span>Login</span>
+            </Link>
+
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="p-2 rounded-xl text-slate-700 hover:bg-slate-100"
@@ -160,55 +208,42 @@ export default function Navbar() {
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="lg:hidden bg-white border-b border-slate-200 px-4 pt-2 pb-6 space-y-3">
-          <div className="flex items-center gap-2 p-3 bg-red-50 rounded-xl text-red-950 text-xs font-semibold">
-            <MapPin className="w-4 h-4 text-[#D71920]" />
-            <span>Serving <strong>Proddatur</strong> & surrounding Kadapa AP regions</span>
-          </div>
+        <div className="lg:hidden bg-white border-b border-slate-200 px-4 pt-2 pb-6 space-y-4">
+          
+          {/* Mobile Sign In Header Card */}
+          <Link
+            href="/auth/login"
+            onClick={() => setMobileMenuOpen(false)}
+            className="flex items-center justify-between p-3.5 rounded-2xl bg-[#111111] text-white shadow-md"
+          >
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-full bg-[#D71920] text-white flex items-center justify-center font-bold text-xs">
+                <LogIn className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="font-extrabold text-xs">Sign In / Register</div>
+                <div className="text-[10px] text-slate-400">Phone OTP & Email Magic Link</div>
+              </div>
+            </div>
+            <span className="text-xs text-[#D71920] font-bold">Open →</span>
+          </Link>
 
           <div className="grid grid-cols-1 gap-1 text-sm font-semibold text-slate-800">
-            <Link href="/cars" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2.5 rounded-lg hover:bg-slate-100">
-              Explore Cars
+            <Link href="/cars" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2.5 rounded-lg hover:bg-slate-100 flex items-center justify-between">
+              <span>🚗 Explore Fleet</span>
             </Link>
-            <Link href="/rent-a-car/proddatur" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2.5 rounded-lg hover:bg-slate-100">
-              Proddatur Hubs
+            <Link href="/customer/dashboard" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2.5 rounded-lg hover:bg-slate-100 text-[#D71920] flex items-center justify-between">
+              <span>📋 My Bookings</span>
             </Link>
-            <Link href="/#how-it-works" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2.5 rounded-lg hover:bg-slate-100">
-              How It Works
+            <Link href="/customer/profile" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2.5 rounded-lg hover:bg-slate-100 flex items-center justify-between">
+              <span>🪪 KYC & Driving License</span>
             </Link>
-            <Link href="/owner/dashboard" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2.5 rounded-lg hover:bg-slate-100">
-              Host Portal
+            <Link href="/owner/dashboard" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2.5 rounded-lg hover:bg-slate-100 flex items-center justify-between">
+              <span>🏢 Host Portal (Earn ₹40k+/mo)</span>
             </Link>
-            <Link href="/customer/dashboard" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2.5 rounded-lg hover:bg-slate-100 text-[#D71920]">
-              My Bookings
+            <Link href="/admin/dashboard" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2.5 rounded-lg hover:bg-slate-100 flex items-center justify-between">
+              <span>⚙️ Admin Control Center</span>
             </Link>
-            <Link href="/admin/dashboard" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2.5 rounded-lg hover:bg-slate-100">
-              Admin Control Center
-            </Link>
-          </div>
-
-          <div className="pt-3 border-t border-slate-100">
-            <div className="text-[11px] text-slate-400 mb-2 font-bold uppercase tracking-wider">Switch Persona:</div>
-            <div className="flex gap-2">
-              <button 
-                onClick={() => { handleRoleChange('customer'); setMobileMenuOpen(false); }}
-                className={`flex-1 py-2 text-xs rounded-xl border font-bold ${currentUser?.role === 'customer' ? 'bg-[#D71920] text-white border-[#D71920]' : 'bg-slate-50 border-slate-200'}`}
-              >
-                Customer
-              </button>
-              <button 
-                onClick={() => { handleRoleChange('owner'); setMobileMenuOpen(false); }}
-                className={`flex-1 py-2 text-xs rounded-xl border font-bold ${currentUser?.role === 'owner' ? 'bg-[#D71920] text-white border-[#D71920]' : 'bg-slate-50 border-slate-200'}`}
-              >
-                Host
-              </button>
-              <button 
-                onClick={() => { handleRoleChange('admin'); setMobileMenuOpen(false); }}
-                className={`flex-1 py-2 text-xs rounded-xl border font-bold ${currentUser?.role === 'admin' ? 'bg-[#111111] text-white border-[#111111]' : 'bg-slate-50 border-slate-200'}`}
-              >
-                Admin
-              </button>
-            </div>
           </div>
         </div>
       )}
