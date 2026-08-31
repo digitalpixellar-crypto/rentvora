@@ -30,6 +30,8 @@ export default function LoginPage() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [otpSent, setOtpSent] = useState(false);
   const [otpCode, setOtpCode] = useState('');
+  const [countdown, setCountdown] = useState(30);
+  const [canResend, setCanResend] = useState(false);
   
   // Email Auth State
   const [email, setEmail] = useState('');
@@ -78,6 +80,25 @@ export default function LoginPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  
+  React.useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (otpSent && countdown > 0) {
+      timer = setInterval(() => {
+        setCountdown((prev) => prev - 1);
+      }, 1000);
+    } else if (countdown === 0) {
+      setCanResend(true);
+    }
+    return () => clearInterval(timer);
+  }, [otpSent, countdown]);
+
+  const handleResendOtp = async () => {
+    setCountdown(30);
+    setCanResend(false);
+    await handleSendPhoneOtp({ preventDefault: () => {} } as any);
   };
 
   // Verify Phone OTP
@@ -295,6 +316,22 @@ export default function LoginPage() {
                   onChange={(e) => setOtpCode(e.target.value)}
                   className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 font-black text-slate-900 outline-none text-center text-lg tracking-widest focus:border-[#D71920]"
                 />
+
+                <div className="flex items-center justify-between text-[11px] pt-1">
+                  <span className="text-slate-400">Didn't receive SMS?</span>
+                  {!canResend ? (
+                    <span className="text-slate-500 font-semibold">Resend OTP in {countdown}s</span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleResendOtp}
+                      disabled={loading}
+                      className="text-[#D71920] font-bold hover:underline cursor-pointer"
+                    >
+                      Resend OTP Now
+                    </button>
+                  )}
+                </div>
               </div>
 
               <button

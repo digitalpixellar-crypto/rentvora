@@ -54,6 +54,26 @@ export default function CheckoutPage() {
       await new Promise(resolve => setTimeout(resolve, 1400));
       await confirmPayment(booking.id, paymentMethod);
 
+      // Trigger Resend email invoice delivery in background
+      try {
+        fetch('/api/emails/send-confirmation', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            customerEmail: booking.customer?.email || 'pavan.kalyan@gmail.com',
+            customerName: booking.customer?.full_name || 'Pavan Kalyan',
+            carName: `${booking.car?.brand || 'Car'} ${booking.car?.model || ''}`,
+            bookingRef: booking.booking_reference,
+            pickupPoint: booking.pickup_location?.area_locality,
+            startTime: formatDateTime(booking.start_time),
+            endTime: formatDateTime(booking.end_time),
+            totalAmount: booking.total_amount,
+            refundableDeposit: booking.security_deposit_amount,
+            rentalType: booking.rental_type,
+          }),
+        }).catch(err => console.warn('Email dispatch background notice:', err));
+      } catch {}
+
       router.push(`/booking-confirmation/${booking.id}`);
     } catch (err: any) {
       setError(err.message || 'Payment processing failed. Please try again.');
