@@ -17,7 +17,9 @@ import {
   User,
   UserPlus,
   LogIn as LogInIcon,
-  Building2
+  Building2,
+  RefreshCw,
+  Edit2
 } from 'lucide-react';
 import { useMarketplace } from '@/lib/mock-data/client-store';
 import { createClient } from '@/lib/supabase/client';
@@ -40,11 +42,18 @@ function LoginPageInner() {
   const [signInMethod, setSignInMethod] = useState<'email' | 'phone' | 'demo'>('email');
 
   // Sign Up Form State
+  const [signUpStep, setSignUpStep] = useState<'details' | 'verify_email'>('details');
   const [signUpFullName, setSignUpFullName] = useState('');
   const [signUpEmail, setSignUpEmail] = useState('');
   const [signUpPhone, setSignUpPhone] = useState('');
   const [signUpPassword, setSignUpPassword] = useState('');
   const [signUpRole, setSignUpRole] = useState<UserRole>('customer');
+
+  // Email OTP Verification State
+  const [emailOtpCode, setEmailOtpCode] = useState('');
+  const [verificationToken, setVerificationToken] = useState('');
+  const [emailCountdown, setEmailCountdown] = useState(30);
+  const [canResendEmailOtp, setCanResendEmailOtp] = useState(false);
 
   // Sign In Form State
   const [signInEmail, setSignInEmail] = useState('');
@@ -81,15 +90,24 @@ function LoginPageInner() {
     return () => clearInterval(timer);
   }, [otpSent, countdown]);
 
-  // 1. Handle New User Registration (Create Account)
-  const handleCreateAccount = async (e: React.FormEvent) => {
+  // Email OTP countdown
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (signUpStep === 'verify_email' && emailCountdown > 0) {
+      timer = setInterval(() => setEmailCountdown(prev => prev - 1), 1000);
+    } else if (emailCountdown === 0) {
+      setCanResendEmailOtp(true);
+    }
+    return () => clearInterval(timer);
+  }, [signUpStep, emailCountdown]);
+
+  // Step 1: Send Email Verification Code for Registration
+  const handleRequestEmailVerification = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage(null);
 
     const cleanEmail = signUpEmail.trim().toLowerCase();
     const cleanName = signUpFullName.trim() || cleanEmail.split('@')[0];
-    const cleanPhone = signUpPhone.replace(/\D/g, '').slice(-10);
-    const fullPhone = cleanPhone ? `+91${cleanPhone}` : null;
 
     if (!cleanEmail || !cleanEmail.includes('@')) {
       setMessage({ type: 'error', text: 'Please enter a valid email address.' });
@@ -103,65 +121,128 @@ function LoginPageInner() {
 
     setLoading(true);
     try {
-      // 1. Supabase Auth Sign Up
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: cleanEmail,
-        password: signUpPassword,
-        options: {
-          data: {
-            full_name: cleanName,
-            phone: fullPhone,
-            role: signUpRole,
-          },
-        },
+      const res = await fetch('/api/auth/send-verification-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: cleanEmail,
+          fullName: cleanName,
+        }),
       });
 
-      const userId = authData?.user?.id || 'usr-' + Date.now();
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to send verification code');
+      }
 
-      // 2. Sync local user store immediately
+      setVerificationToken(data.token);
+      setSignUpStep('verify_email');
+      setEmailCountdown(30);
+      setCanResendEmailOtp(false);
+      setMessage({
+        type: 'success',
+        text: `📧 6-digit verification code sent to ${cleanEmail}! Please check your inbox (or spam folder).`,
+      });
+
+    } catch (err: any) {
+      setMessage({ type: 'error', text: err?.message || 'Error sending verification email. Please try again.' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Step 2: Verify Email OTP & Create Account
+  const handleVerifyEmailAndRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setMessage(null);
+
+    const cleanOtp = emailOtpCode.trim();
+    if (cleanOtp.length < 6) {
+      setMessage({ type: 'error', text: 'Please enter the 6-digit verification code sent to your email.' });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const cleanEmail = signUpEmail.trim().toLowerCase();
+      const cleanName = signUpFullName.trim() || cleanEmail.split('@')[0];
+      const cleanPhone = signUpPhone.replace(/\D/g, '').slice(-10);
+      const fullPhone = cleanPhone ? `+91${cleanPhone}` : null;
+
+      const res = await fetch('/api/auth/verify-and-register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: cleanEmail,
+          otp: cleanOtp,
+          token: verificationToken,
+          fullName: cleanName,
+          phone: fullPhone,
+          password: signUpPassword,
+          role: signUpRole,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Verification failed. Please try again.');
+      }
+
+      // Successful verification & registration!
+      // Sign in locally and via Supabase
       setCurrentUserRole(signUpRole, {
-        id: userId,
+        id: data.user?.id || 'usr-' + Date.now(),
         email: cleanEmail,
         full_name: cleanName,
         phone: fullPhone || '+91 78938 17322',
         role: signUpRole,
       });
 
-      // 3. Dispatch backend registration and welcome email via Resend
-      fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: cleanEmail,
-          password: signUpPassword,
-          fullName: cleanName,
-          phone: fullPhone,
-          role: signUpRole,
-        }),
+      // Also attempt Supabase sign in with password so browser session persists
+      supabase.auth.signInWithPassword({
+        email: cleanEmail,
+        password: signUpPassword,
       }).catch(() => {});
 
       setMessage({
         type: 'success',
-        text: `🎉 Welcome to RENTVORA, ${cleanName.split(' ')[0]}! Account created successfully. Redirecting...`,
+        text: `🎉 Email verified! Welcome to RENTVORA, ${cleanName.split(' ')[0]}! Redirecting...`,
       });
 
       const destination = signUpRole === 'owner' ? '/owner/dashboard' : redirectTo;
       setTimeout(() => router.push(destination), 800);
 
     } catch (err: any) {
-      // Graceful fallback: create local profile
-      setCurrentUserRole(signUpRole, {
-        email: cleanEmail,
-        full_name: cleanName,
-        phone: fullPhone || '+91 78938 17322',
-        role: signUpRole,
+      setMessage({ type: 'error', text: err?.message || 'Invalid or expired verification code.' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Resend Email OTP
+  const handleResendEmailOtp = async () => {
+    if (!canResendEmailOtp || loading) return;
+    setMessage(null);
+    setLoading(true);
+    try {
+      const cleanEmail = signUpEmail.trim().toLowerCase();
+      const cleanName = signUpFullName.trim() || cleanEmail.split('@')[0];
+
+      const res = await fetch('/api/auth/send-verification-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: cleanEmail, fullName: cleanName }),
       });
 
-      setMessage({
-        type: 'success',
-        text: `🎉 Welcome, ${cleanName}! Account ready. Redirecting...`,
-      });
-      setTimeout(() => router.push(redirectTo), 800);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to resend code');
+
+      setVerificationToken(data.token);
+      setEmailCountdown(30);
+      setCanResendEmailOtp(false);
+      setMessage({ type: 'success', text: `New 6-digit code sent to ${cleanEmail}!` });
+    } catch (err: any) {
+      setMessage({ type: 'error', text: err?.message || 'Failed to resend code.' });
     } finally {
       setLoading(false);
     }
@@ -191,13 +272,13 @@ function LoginPageInner() {
       });
 
       if (error) {
-        // If password login fails, check if user might be new
         setMessage({
           type: 'error',
           text: error.message || 'Invalid email or password.',
           actionLabel: `Create a new account with ${cleanEmail.split('@')[0]} →`,
           action: () => {
             setAuthMode('signup');
+            setSignUpStep('details');
             setSignUpEmail(cleanEmail);
             setSignUpPassword(signInPassword);
           },
@@ -243,7 +324,7 @@ function LoginPageInner() {
       setOtpSent(true);
       setCountdown(30);
       setCanResend(false);
-      setMessage({ type: 'success', text: `OTP sent to +91 ${cleanPhone} (or enter 123456 for instant login)` });
+      setMessage({ type: 'success', text: `OTP sent to +91 ${cleanPhone} (or enter 123456 for instant demo login)` });
     } catch {
       setOtpSent(true);
       setMessage({ type: 'success', text: 'Enter code 123456 to continue.' });
@@ -317,11 +398,13 @@ function LoginPageInner() {
           </div>
           <div>
             <h1 className="text-xl font-black text-slate-950">
-              {authMode === 'signup' ? 'Create Your Account' : 'Welcome Back'}
+              {authMode === 'signup' 
+                ? (signUpStep === 'verify_email' ? 'Verify Your Email' : 'Create Your Account') 
+                : 'Welcome Back'}
             </h1>
             <p className="text-xs text-slate-500">
               {authMode === 'signup' 
-                ? 'Join RENTVORA for instant self-drive car rentals across AP' 
+                ? (signUpStep === 'verify_email' ? 'Enter the 6-digit code sent to your email' : 'Join RENTVORA for instant self-drive car rentals across AP')
                 : 'Sign in to manage bookings, KYC, or host your car'}
             </p>
           </div>
@@ -331,7 +414,7 @@ function LoginPageInner() {
         <div className="grid grid-cols-2 gap-1.5 p-1 bg-slate-100 rounded-2xl text-xs font-black">
           <button
             type="button"
-            onClick={() => { setAuthMode('signin'); setMessage(null); }}
+            onClick={() => { setAuthMode('signin'); setSignUpStep('details'); setMessage(null); }}
             className={`py-2.5 rounded-xl transition flex items-center justify-center gap-1.5 ${
               authMode === 'signin' 
                 ? 'bg-white text-slate-950 shadow-sm' 
@@ -384,139 +467,209 @@ function LoginPageInner() {
         )}
 
         {/* ============================================================ */}
-        {/* VIEW 1: CREATE NEW ACCOUNT (SIGN UP FORM)                    */}
+        {/* VIEW 1: CREATE NEW ACCOUNT                                   */}
         {/* ============================================================ */}
         {authMode === 'signup' && (
-          <form onSubmit={handleCreateAccount} className="space-y-3.5 text-xs font-semibold">
-            
-            {/* Full Name */}
-            <div className="space-y-1">
-              <label className="block text-slate-700 font-bold uppercase tracking-wider text-[10px]">
-                Full Name (as per Driving License)
-              </label>
-              <div className="flex items-center bg-slate-50 border border-slate-200 rounded-2xl p-2.5 focus-within:border-[#D71920] transition">
-                <User className="w-4 h-4 text-slate-400 ml-1 mr-2 shrink-0" />
+          signUpStep === 'details' ? (
+            /* Step 1: User fills in details */
+            <form onSubmit={handleRequestEmailVerification} className="space-y-3.5 text-xs font-semibold">
+              
+              {/* Full Name */}
+              <div className="space-y-1">
+                <label className="block text-slate-700 font-bold uppercase tracking-wider text-[10px]">
+                  Full Name (as per Driving License)
+                </label>
+                <div className="flex items-center bg-slate-50 border border-slate-200 rounded-2xl p-2.5 focus-within:border-[#D71920] transition">
+                  <User className="w-4 h-4 text-slate-400 ml-1 mr-2 shrink-0" />
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Yeswanth Reddy"
+                    value={signUpFullName}
+                    onChange={(e) => setSignUpFullName(e.target.value)}
+                    className="w-full bg-transparent font-bold text-slate-900 outline-none text-xs"
+                  />
+                </div>
+              </div>
+
+              {/* Email Address */}
+              <div className="space-y-1">
+                <label className="block text-slate-700 font-bold uppercase tracking-wider text-[10px]">
+                  Email Address (Verification Code will be sent here)
+                </label>
+                <div className="flex items-center bg-slate-50 border border-slate-200 rounded-2xl p-2.5 focus-within:border-[#D71920] transition">
+                  <Mail className="w-4 h-4 text-slate-400 ml-1 mr-2 shrink-0" />
+                  <input
+                    type="email"
+                    required
+                    placeholder="name@gmail.com"
+                    value={signUpEmail}
+                    onChange={(e) => setSignUpEmail(e.target.value)}
+                    className="w-full bg-transparent font-bold text-slate-900 outline-none text-xs"
+                  />
+                </div>
+              </div>
+
+              {/* Mobile Phone Number */}
+              <div className="space-y-1">
+                <label className="block text-slate-700 font-bold uppercase tracking-wider text-[10px]">
+                  Mobile Number (for Booking &amp; WhatsApp Updates)
+                </label>
+                <div className="flex items-center bg-slate-50 border border-slate-200 rounded-2xl p-2.5 focus-within:border-[#D71920] transition">
+                  <span className="font-extrabold text-slate-900 px-1 border-r border-slate-200 text-xs">+91</span>
+                  <input
+                    type="tel"
+                    maxLength={10}
+                    placeholder="78938 17322"
+                    value={signUpPhone}
+                    onChange={(e) => setSignUpPhone(e.target.value.replace(/\D/g, ''))}
+                    className="w-full bg-transparent px-2 font-bold text-slate-900 outline-none text-xs"
+                  />
+                </div>
+              </div>
+
+              {/* Password */}
+              <div className="space-y-1">
+                <label className="block text-slate-700 font-bold uppercase tracking-wider text-[10px]">
+                  Create Password
+                </label>
+                <div className="flex items-center bg-slate-50 border border-slate-200 rounded-2xl p-2.5 focus-within:border-[#D71920] transition">
+                  <KeyRound className="w-4 h-4 text-slate-400 ml-1 mr-2 shrink-0" />
+                  <input
+                    type="password"
+                    required
+                    minLength={6}
+                    placeholder="At least 6 characters"
+                    value={signUpPassword}
+                    onChange={(e) => setSignUpPassword(e.target.value)}
+                    className="w-full bg-transparent font-bold text-slate-900 outline-none text-xs"
+                  />
+                </div>
+              </div>
+
+              {/* Role Selection */}
+              <div className="space-y-1.5 pt-1">
+                <label className="block text-slate-700 font-bold uppercase tracking-wider text-[10px]">
+                  I want to:
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSignUpRole('customer')}
+                    className={`p-2.5 rounded-xl border text-left transition ${
+                      signUpRole === 'customer'
+                        ? 'border-[#D71920] bg-red-50/40 text-slate-950 font-bold'
+                        : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                    }`}
+                  >
+                    <div className="text-xs font-black">🚗 Rent Cars</div>
+                    <div className="text-[10px] text-slate-400">Self-drive &amp; chauffeur</div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setSignUpRole('owner')}
+                    className={`p-2.5 rounded-xl border text-left transition ${
+                      signUpRole === 'owner'
+                        ? 'border-[#D71920] bg-red-50/40 text-slate-950 font-bold'
+                        : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                    }`}
+                  >
+                    <div className="text-xs font-black">🏢 Host a Car</div>
+                    <div className="text-[10px] text-slate-400">Earn ₹40k+/month</div>
+                  </button>
+                </div>
+              </div>
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full mt-2 py-3.5 rounded-2xl bg-[#D71920] hover:bg-[#b8141a] active:scale-[0.98] disabled:opacity-50 text-white font-black text-xs shadow-lg shadow-[#D71920]/25 transition flex items-center justify-center gap-2 cursor-pointer"
+              >
+                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
+                <span>{loading ? 'Sending Code...' : 'Send Verification Code to Email →'}</span>
+              </button>
+
+              <div className="text-center pt-2 text-[11px] text-slate-500">
+                Already have an account?{' '}
+                <button
+                  type="button"
+                  onClick={() => { setAuthMode('signin'); setMessage(null); }}
+                  className="font-bold text-[#D71920] hover:underline"
+                >
+                  Sign In
+                </button>
+              </div>
+            </form>
+          ) : (
+            /* Step 2: User enters 6-digit email OTP */
+            <form onSubmit={handleVerifyEmailAndRegister} className="space-y-4 text-xs font-semibold">
+              
+              <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl flex items-center justify-between">
+                <div>
+                  <div className="text-[10px] text-slate-500 font-bold uppercase">Verifying Email</div>
+                  <div className="font-extrabold text-xs text-slate-900 truncate">{signUpEmail}</div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => { setSignUpStep('details'); setMessage(null); }}
+                  className="text-[11px] text-[#D71920] font-bold hover:underline flex items-center gap-1"
+                >
+                  <Edit2 className="w-3 h-3" />
+                  <span>Edit</span>
+                </button>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="block text-slate-700 font-bold uppercase tracking-wider text-[10px] text-center">
+                  Enter 6-Digit Verification Code
+                </label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Yeswanth Reddy"
-                  value={signUpFullName}
-                  onChange={(e) => setSignUpFullName(e.target.value)}
-                  className="w-full bg-transparent font-bold text-slate-900 outline-none text-xs"
+                  maxLength={6}
+                  autoFocus
+                  placeholder="&bull; &bull; &bull; &bull; &bull; &bull;"
+                  value={emailOtpCode}
+                  onChange={(e) => setEmailOtpCode(e.target.value.replace(/\D/g, ''))}
+                  className="w-full bg-slate-50 border-2 border-slate-200 focus:border-[#D71920] rounded-2xl p-3.5 font-black text-slate-950 outline-none text-center text-2xl tracking-[0.4em] transition"
                 />
               </div>
-            </div>
 
-            {/* Email Address */}
-            <div className="space-y-1">
-              <label className="block text-slate-700 font-bold uppercase tracking-wider text-[10px]">
-                Email Address
-              </label>
-              <div className="flex items-center bg-slate-50 border border-slate-200 rounded-2xl p-2.5 focus-within:border-[#D71920] transition">
-                <Mail className="w-4 h-4 text-slate-400 ml-1 mr-2 shrink-0" />
-                <input
-                  type="email"
-                  required
-                  placeholder="name@gmail.com"
-                  value={signUpEmail}
-                  onChange={(e) => setSignUpEmail(e.target.value)}
-                  className="w-full bg-transparent font-bold text-slate-900 outline-none text-xs"
-                />
-              </div>
-            </div>
-
-            {/* Mobile Phone Number */}
-            <div className="space-y-1">
-              <label className="block text-slate-700 font-bold uppercase tracking-wider text-[10px]">
-                Mobile Number (for Booking &amp; WhatsApp Updates)
-              </label>
-              <div className="flex items-center bg-slate-50 border border-slate-200 rounded-2xl p-2.5 focus-within:border-[#D71920] transition">
-                <span className="font-extrabold text-slate-900 px-1 border-r border-slate-200 text-xs">+91</span>
-                <input
-                  type="tel"
-                  maxLength={10}
-                  placeholder="78938 17322"
-                  value={signUpPhone}
-                  onChange={(e) => setSignUpPhone(e.target.value.replace(/\D/g, ''))}
-                  className="w-full bg-transparent px-2 font-bold text-slate-900 outline-none text-xs"
-                />
-              </div>
-            </div>
-
-            {/* Password */}
-            <div className="space-y-1">
-              <label className="block text-slate-700 font-bold uppercase tracking-wider text-[10px]">
-                Create Password
-              </label>
-              <div className="flex items-center bg-slate-50 border border-slate-200 rounded-2xl p-2.5 focus-within:border-[#D71920] transition">
-                <KeyRound className="w-4 h-4 text-slate-400 ml-1 mr-2 shrink-0" />
-                <input
-                  type="password"
-                  required
-                  minLength={6}
-                  placeholder="At least 6 characters"
-                  value={signUpPassword}
-                  onChange={(e) => setSignUpPassword(e.target.value)}
-                  className="w-full bg-transparent font-bold text-slate-900 outline-none text-xs"
-                />
-              </div>
-            </div>
-
-            {/* Role / Account Type Selection */}
-            <div className="space-y-1.5 pt-1">
-              <label className="block text-slate-700 font-bold uppercase tracking-wider text-[10px]">
-                I want to:
-              </label>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="flex items-center justify-between text-[11px] text-slate-500 px-1">
+                <span>Didn&apos;t receive the email?</span>
                 <button
                   type="button"
-                  onClick={() => setSignUpRole('customer')}
-                  className={`p-2.5 rounded-xl border text-left transition ${
-                    signUpRole === 'customer'
-                      ? 'border-[#D71920] bg-red-50/40 text-slate-950 font-bold'
-                      : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                  onClick={handleResendEmailOtp}
+                  disabled={!canResendEmailOtp || loading}
+                  className={`font-bold flex items-center gap-1 ${
+                    canResendEmailOtp ? 'text-[#D71920] hover:underline cursor-pointer' : 'text-slate-400 cursor-not-allowed'
                   }`}
                 >
-                  <div className="text-xs font-black">🚗 Rent Cars</div>
-                  <div className="text-[10px] text-slate-400">Self-drive &amp; chauffeur</div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setSignUpRole('owner')}
-                  className={`p-2.5 rounded-xl border text-left transition ${
-                    signUpRole === 'owner'
-                      ? 'border-[#D71920] bg-red-50/40 text-slate-950 font-bold'
-                      : 'border-slate-200 text-slate-600 hover:bg-slate-50'
-                  }`}
-                >
-                  <div className="text-xs font-black">🏢 Host a Car</div>
-                  <div className="text-[10px] text-slate-400">Earn ₹40k+/month</div>
+                  <RefreshCw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} />
+                  <span>{canResendEmailOtp ? 'Resend Code' : `Resend in ${emailCountdown}s`}</span>
                 </button>
               </div>
-            </div>
 
-            {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full mt-2 py-3.5 rounded-2xl bg-[#D71920] hover:bg-[#b8141a] active:scale-[0.98] disabled:opacity-50 text-white font-black text-xs shadow-lg shadow-[#D71920]/25 transition flex items-center justify-center gap-2"
-            >
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
-              <span>{loading ? 'Creating Account...' : 'Create Free Account & Start Renting →'}</span>
-            </button>
+              <button
+                type="submit"
+                disabled={loading || emailOtpCode.length < 6}
+                className="w-full py-3.5 rounded-2xl bg-[#D71920] hover:bg-[#b8141a] active:scale-[0.98] disabled:opacity-50 text-white font-black text-xs shadow-lg shadow-[#D71920]/25 transition flex items-center justify-center gap-2 cursor-pointer"
+              >
+                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                <span>{loading ? 'Verifying Code...' : 'Verify & Activate Account →'}</span>
+              </button>
 
-            <div className="text-center pt-2 text-[11px] text-slate-500">
-              Already have an account?{' '}
               <button
                 type="button"
-                onClick={() => { setAuthMode('signin'); setMessage(null); }}
-                className="font-bold text-[#D71920] hover:underline"
+                onClick={() => { setSignUpStep('details'); setMessage(null); }}
+                className="w-full py-2 text-center text-xs font-bold text-slate-500 hover:text-slate-900"
               >
-                Sign In
+                &larr; Back to Registration Form
               </button>
-            </div>
-          </form>
+            </form>
+          )
         )}
 
         {/* ============================================================ */}
@@ -596,7 +749,7 @@ function LoginPageInner() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-3.5 rounded-2xl bg-[#D71920] hover:bg-[#b8141a] active:scale-[0.98] disabled:opacity-50 text-white font-black text-xs shadow-lg shadow-[#D71920]/25 transition flex items-center justify-center gap-2"
+                  className="w-full py-3.5 rounded-2xl bg-[#D71920] hover:bg-[#b8141a] active:scale-[0.98] disabled:opacity-50 text-white font-black text-xs shadow-lg shadow-[#D71920]/25 transition flex items-center justify-center gap-2 cursor-pointer"
                 >
                   {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogInIcon className="w-4 h-4" />}
                   <span>{loading ? 'Signing In...' : 'Sign In to Your Account →'}</span>
@@ -629,7 +782,7 @@ function LoginPageInner() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full py-3.5 rounded-2xl bg-[#D71920] hover:bg-[#b8141a] active:scale-[0.98] disabled:opacity-50 text-white font-black text-xs shadow-lg shadow-[#D71920]/25 transition flex items-center justify-center gap-2"
+                    className="w-full py-3.5 rounded-2xl bg-[#D71920] hover:bg-[#b8141a] active:scale-[0.98] disabled:opacity-50 text-white font-black text-xs shadow-lg shadow-[#D71920]/25 transition flex items-center justify-center gap-2 cursor-pointer"
                   >
                     {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Phone className="w-4 h-4" />}
                     <span>{loading ? 'Sending OTP...' : 'Send Verification OTP →'}</span>
@@ -664,7 +817,7 @@ function LoginPageInner() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full py-3.5 rounded-2xl bg-[#D71920] hover:bg-[#b8141a] active:scale-[0.98] disabled:opacity-50 text-white font-black text-xs shadow-lg shadow-[#D71920]/25 transition flex items-center justify-center gap-2"
+                    className="w-full py-3.5 rounded-2xl bg-[#D71920] hover:bg-[#b8141a] active:scale-[0.98] disabled:opacity-50 text-white font-black text-xs shadow-lg shadow-[#D71920]/25 transition flex items-center justify-center gap-2 cursor-pointer"
                   >
                     {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
                     <span>{loading ? 'Verifying OTP...' : 'Verify & Continue'}</span>
@@ -679,7 +832,7 @@ function LoginPageInner() {
                 <button
                   type="button"
                   onClick={() => handleQuickDemoLogin('customer')}
-                  className="w-full p-3 rounded-2xl border border-slate-200 hover:border-[#D71920] bg-slate-50 hover:bg-red-50/20 text-left transition flex items-center justify-between group"
+                  className="w-full p-3 rounded-2xl border border-slate-200 hover:border-[#D71920] bg-slate-50 hover:bg-red-50/20 text-left transition flex items-center justify-between group cursor-pointer"
                 >
                   <div>
                     <div className="font-extrabold text-xs text-slate-900 flex items-center gap-1.5">
@@ -694,7 +847,7 @@ function LoginPageInner() {
                 <button
                   type="button"
                   onClick={() => handleQuickDemoLogin('owner')}
-                  className="w-full p-3 rounded-2xl border border-slate-200 hover:border-[#D71920] bg-slate-50 hover:bg-red-50/20 text-left transition flex items-center justify-between group"
+                  className="w-full p-3 rounded-2xl border border-slate-200 hover:border-[#D71920] bg-slate-50 hover:bg-red-50/20 text-left transition flex items-center justify-between group cursor-pointer"
                 >
                   <div>
                     <div className="font-extrabold text-xs text-slate-900 flex items-center gap-1.5">
@@ -712,7 +865,7 @@ function LoginPageInner() {
               New to RENTVORA?{' '}
               <button
                 type="button"
-                onClick={() => { setAuthMode('signup'); setMessage(null); }}
+                onClick={() => { setAuthMode('signup'); setSignUpStep('details'); setMessage(null); }}
                 className="font-bold text-[#D71920] hover:underline"
               >
                 Create an account
@@ -725,7 +878,7 @@ function LoginPageInner() {
         {/* Security & Encryption Badge */}
         <div className="pt-3 border-t border-slate-100 flex items-center justify-center gap-1.5 text-[11px] text-slate-400 font-medium text-center">
           <ShieldCheck className="w-4 h-4 text-[#D71920]" />
-          <span>256-Bit Encrypted &amp; Supabase Cloud Secured</span>
+          <span>256-Bit Encrypted &bull; Official RENTVORA AP Operations</span>
         </div>
 
       </div>
