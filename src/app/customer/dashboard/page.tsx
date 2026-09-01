@@ -108,25 +108,33 @@ export default function CustomerDashboardPage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-2xl bg-[#D71920] text-white font-black text-2xl flex items-center justify-center shadow-lg shadow-[#D71920]/30">
-            {currentUser?.full_name?.charAt(0) || 'P'}
-          </div>
+          {currentUser?.avatar_url ? (
+            <img 
+              src={currentUser.avatar_url} 
+              alt="Profile Avatar" 
+              className="w-16 h-16 rounded-2xl object-cover border-2 border-white shadow-lg shrink-0" 
+            />
+          ) : (
+            <div className="w-16 h-16 rounded-2xl bg-[#D71920] text-white font-black text-2xl flex items-center justify-center shadow-lg shadow-[#D71920]/30 shrink-0">
+              {currentUser?.full_name?.charAt(0) || 'P'}
+            </div>
+          )}
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900">{currentUser?.full_name || 'Pavan Kalyan M'}</h1>
-              <span className="px-2.5 py-0.5 rounded-full bg-red-100 text-red-900 text-[10px] font-bold">Verified Customer</span>
+              <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-900 text-[10px] font-bold">Verified Customer</span>
             </div>
-            <p className="text-xs text-slate-500">{currentUser?.email} • {currentUser?.phone}</p>
+            <p className="text-xs text-slate-500">{currentUser?.email} &bull; {currentUser?.phone}</p>
           </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
           <Link
             href="/customer/profile"
-            className="px-4 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition flex items-center gap-1.5 border border-slate-200"
+            className="px-4 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition flex items-center gap-1.5 border border-slate-200 shadow-xs"
           >
-            <ShieldCheck className="w-4 h-4 text-[#D71920]" />
-            <span>KYC & License</span>
+            <User className="w-4 h-4 text-[#D71920]" />
+            <span>Edit Profile &amp; Photo</span>
           </Link>
 
           <Link

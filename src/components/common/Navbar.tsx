@@ -108,9 +108,13 @@ export default function Navbar() {
                   onClick={() => setUserDropdownOpen(!userDropdownOpen)}
                   className="flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-800 hover:bg-slate-100 transition whitespace-nowrap cursor-pointer shadow-xs"
                 >
-                  <div className="w-7 h-7 rounded-full bg-[#D71920] text-white flex items-center justify-center text-xs font-black">
-                    {currentUser.full_name?.charAt(0).toUpperCase() || 'U'}
-                  </div>
+                  {currentUser.avatar_url ? (
+                    <img src={currentUser.avatar_url} alt="avatar" className="w-7 h-7 rounded-full object-cover border border-slate-300 shadow-xs" />
+                  ) : (
+                    <div className="w-7 h-7 rounded-full bg-[#D71920] text-white flex items-center justify-center text-xs font-black">
+                      {currentUser.full_name?.charAt(0).toUpperCase() || 'U'}
+                    </div>
+                  )}
                   <div className="text-left">
                     <div className="font-extrabold text-xs text-slate-900 leading-tight">
                       {currentUser.full_name?.split(' ')[0] || 'User'}
@@ -239,9 +243,13 @@ export default function Navbar() {
           {currentUser ? (
             <div className="p-3.5 rounded-2xl bg-slate-900 text-white shadow-md flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-full bg-[#D71920] text-white flex items-center justify-center font-black text-sm">
-                  {currentUser.full_name?.charAt(0).toUpperCase() || 'U'}
-                </div>
+                {currentUser.avatar_url ? (
+                  <img src={currentUser.avatar_url} alt="avatar" className="w-9 h-9 rounded-full object-cover border border-slate-700 shadow-sm" />
+                ) : (
+                  <div className="w-9 h-9 rounded-full bg-[#D71920] text-white flex items-center justify-center font-black text-sm">
+                    {currentUser.full_name?.charAt(0).toUpperCase() || 'U'}
+                  </div>
+                )}
                 <div>
                   <div className="font-extrabold text-xs">{currentUser.full_name || 'Driver'}</div>
                   <div className="text-[10px] text-slate-400 truncate">{currentUser.email || currentUser.phone}</div>

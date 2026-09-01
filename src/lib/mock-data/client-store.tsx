@@ -39,6 +39,7 @@ interface MarketplaceContextType {
   addLocation: (locData: Omit<Location, 'id'>) => Promise<Location>;
   updateCommissionRate: (newRate: number) => void;
   addReview: (params: { bookingId: string; carId: string; rating: number; comment: string }) => Promise<Review>;
+  updateUserProfile: (data: Partial<Profile>) => Promise<void>;
 }
 
 const MarketplaceContext = createContext<MarketplaceContextType | undefined>(undefined);
@@ -86,6 +87,7 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
       phone: sbUser.user_metadata?.phone || sbUser.phone || null,
       role: (sbUser.user_metadata?.role as UserRole) || 'customer',
       status: 'active',
+      avatar_url: sbUser.user_metadata?.avatar_url || null,
       created_at: sbUser.created_at || new Date().toISOString(),
       updated_at: new Date().toISOString(),
     });
@@ -406,6 +408,31 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     return newRev;
   };
 
+  const updateUserProfile = async (data: Partial<Profile>): Promise<void> => {
+    if (!currentUser) return;
+    const updated: Profile = { ...currentUser, ...data, updated_at: new Date().toISOString() };
+    setCurrentUser(updated);
+    try {
+      localStorage.setItem('rentvora_user', JSON.stringify(updated));
+    } catch {}
+
+    // Update Supabase profiles table
+    try {
+      if (updated.id && !updated.id.startsWith('guest')) {
+        const supabase = createClient();
+        await supabase.from('profiles').upsert({
+          id: updated.id,
+          full_name: updated.full_name,
+          phone: updated.phone,
+          avatar_url: updated.avatar_url,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'id' });
+      }
+    } catch (e) {
+      console.warn('Profile DB update notice:', e);
+    }
+  };
+
   return (
     <MarketplaceContext.Provider
       value={{
@@ -419,6 +446,7 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
         logout,
         commissionRate,
         setCurrentUserRole,
+        updateUserProfile,
         getCarBySlug,
         getCarById,
         checkAvailability,
