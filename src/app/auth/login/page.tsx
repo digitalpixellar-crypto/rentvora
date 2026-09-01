@@ -324,12 +324,14 @@ function LoginPageInner() {
       const fullPhone = `+91${cleanPhone}`;
       await supabase.auth.signInWithOtp({ phone: fullPhone });
       setOtpSent(true);
+      setOtpCode('123456');
       setCountdown(30);
       setCanResend(false);
-      setMessage({ type: 'success', text: `OTP sent to +91 ${cleanPhone} (or enter 123456 for instant demo login)` });
+      setMessage({ type: 'success', text: `Instant Access Code: 123456 (Click Verify & Continue to log in)` });
     } catch {
       setOtpSent(true);
-      setMessage({ type: 'success', text: 'Enter code 123456 to continue.' });
+      setOtpCode('123456');
+      setMessage({ type: 'success', text: 'Instant Access Code: 123456 (Click Verify & Continue to log in)' });
     } finally {
       setLoading(false);
     }
@@ -338,20 +340,17 @@ function LoginPageInner() {
   const handleVerifyPhoneOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage(null);
-    if (!otpCode || otpCode.length < 6) {
-      setMessage({ type: 'error', text: 'Please enter the 6-digit OTP code.' });
-      return;
-    }
+    const effectiveOtp = otpCode.trim() || '123456';
 
     setLoading(true);
     try {
       const cleanPhone = signInPhone.replace(/\D/g, '').slice(-10);
       const fullPhone = `+91${cleanPhone}`;
 
-      if (otpCode === '123456') {
+      if (effectiveOtp === '123456') {
         setCurrentUserRole('customer', {
           email: `driver${cleanPhone}@rentvora.in`,
-          full_name: `Driver (${cleanPhone})`,
+          full_name: `Customer (${cleanPhone})`,
           phone: fullPhone,
         });
         setMessage({ type: 'success', text: '✅ Verified! Redirecting to dashboard...' });
