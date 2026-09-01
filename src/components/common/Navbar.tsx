@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { 
   MapPin, 
   User, 
@@ -22,16 +22,21 @@ import Logo from './Logo';
 
 export default function Navbar() {
   const pathname = usePathname();
-  const { currentUser, logout, setCurrentUserRole, locations } = useMarketplace();
+  const router = useRouter();
+  const { currentUser, logout, locations, isAuthLoaded } = useMarketplace();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [selectedCity, setSelectedCity] = useState('Proddatur');
 
   const uniqueCities = Array.from(new Set(locations.map(l => l.city)));
 
-  const handleRoleChange = (role: UserRole) => {
-    setCurrentUserRole(role);
+  const handleLogout = async () => {
     setUserDropdownOpen(false);
+    setMobileMenuOpen(false);
+    await logout();
+    if (pathname.startsWith('/customer') || pathname.startsWith('/owner') || pathname.startsWith('/admin')) {
+      router.push('/auth/login');
+    }
   };
 
   return (
@@ -96,112 +101,124 @@ export default function Navbar() {
           {/* 3. Right: Auth / Login & User Controls */}
           <div className="hidden md:flex items-center gap-3 shrink-0">
             
-            {/* Direct Login Button */}
-            <Link
-              href="/auth/login"
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 hover:text-[#D71920] hover:bg-red-50/60 border border-slate-200 transition"
-            >
-              <LogIn className="w-4 h-4 text-[#D71920]" />
-              <span>Sign In / Login</span>
-            </Link>
-
-            {/* User Account / Role Menu */}
-            <div className="relative">
-              <button
-                onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                className="flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-800 hover:bg-slate-100 transition whitespace-nowrap"
-              >
-                <div className="w-6 h-6 rounded-full bg-[#111111] text-white flex items-center justify-center text-[10px] font-black">
-                  {currentUser?.full_name?.charAt(0) || 'U'}
-                </div>
-                <span className="font-bold text-xs">{currentUser?.full_name?.split(' ')[0] || 'Account'}</span>
-                <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
-              </button>
-
-              {userDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-slate-200 py-2 z-50 animate-in fade-in zoom-in-95 font-montserrat">
-                  <div className="px-4 py-2.5 border-b border-slate-100 space-y-0.5">
-                    <div className="font-black text-xs text-slate-900">{currentUser?.full_name || 'Active User'}</div>
-                    <div className="text-[11px] text-slate-400 truncate">{currentUser?.email}</div>
-                    <div className="inline-block mt-1 px-2 py-0.5 rounded-full bg-red-50 text-[#D71920] text-[9px] font-bold uppercase tracking-wider">
-                      Role: {currentUser?.role || 'Customer'}
+            {/* If Logged In: Show Account Dropdown */}
+            {isAuthLoaded && currentUser ? (
+              <div className="relative">
+                <button
+                  onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-800 hover:bg-slate-100 transition whitespace-nowrap cursor-pointer shadow-xs"
+                >
+                  <div className="w-7 h-7 rounded-full bg-[#D71920] text-white flex items-center justify-center text-xs font-black">
+                    {currentUser.full_name?.charAt(0).toUpperCase() || 'U'}
+                  </div>
+                  <div className="text-left">
+                    <div className="font-extrabold text-xs text-slate-900 leading-tight">
+                      {currentUser.full_name?.split(' ')[0] || 'User'}
+                    </div>
+                    <div className="text-[9px] text-[#D71920] font-bold uppercase tracking-wider">
+                      {currentUser.role || 'Customer'}
                     </div>
                   </div>
+                  <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${userDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
 
-                  <div className="py-1">
-                    <Link
-                      href="/customer/dashboard"
-                      onClick={() => setUserDropdownOpen(false)}
-                      className="px-4 py-2 text-xs text-slate-700 hover:bg-red-50 hover:text-[#D71920] flex items-center gap-2 font-medium"
-                    >
-                      <User className="w-3.5 h-3.5 text-[#D71920]" />
-                      <span>My Bookings</span>
-                    </Link>
+                {userDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-slate-200 py-2 z-50 animate-in fade-in zoom-in-95 font-montserrat">
+                    <div className="px-4 py-2.5 border-b border-slate-100 space-y-0.5 bg-slate-50/50">
+                      <div className="font-black text-xs text-slate-900">{currentUser.full_name || 'Valued User'}</div>
+                      <div className="text-[11px] text-slate-500 truncate">{currentUser.email || currentUser.phone}</div>
+                      <div className="inline-block mt-1 px-2 py-0.5 rounded-full bg-red-100 text-[#D71920] text-[9px] font-black uppercase tracking-wider">
+                        Role: {currentUser.role || 'Customer'}
+                      </div>
+                    </div>
 
-                    <Link
-                      href="/customer/profile"
-                      onClick={() => setUserDropdownOpen(false)}
-                      className="px-4 py-2 text-xs text-slate-700 hover:bg-red-50 hover:text-[#D71920] flex items-center gap-2 font-medium"
-                    >
-                      <ShieldCheck className="w-3.5 h-3.5 text-[#D71920]" />
-                      <span>KYC & License Profile</span>
-                    </Link>
+                    <div className="py-1">
+                      <Link
+                        href="/customer/dashboard"
+                        onClick={() => setUserDropdownOpen(false)}
+                        className="px-4 py-2 text-xs text-slate-700 hover:bg-red-50 hover:text-[#D71920] flex items-center gap-2.5 font-semibold"
+                      >
+                        <User className="w-3.5 h-3.5 text-[#D71920]" />
+                        <span>My Bookings</span>
+                      </Link>
 
-                    <Link
-                      href="/owner/dashboard"
-                      onClick={() => setUserDropdownOpen(false)}
-                      className="px-4 py-2 text-xs text-slate-700 hover:bg-red-50 hover:text-[#D71920] flex items-center gap-2 font-medium"
-                    >
-                      <Building2 className="w-3.5 h-3.5 text-[#D71920]" />
-                      <span>Host Dashboard</span>
-                    </Link>
+                      <Link
+                        href="/customer/profile"
+                        onClick={() => setUserDropdownOpen(false)}
+                        className="px-4 py-2 text-xs text-slate-700 hover:bg-red-50 hover:text-[#D71920] flex items-center gap-2.5 font-semibold"
+                      >
+                        <ShieldCheck className="w-3.5 h-3.5 text-[#D71920]" />
+                        <span>KYC & License Profile</span>
+                      </Link>
 
-                    <Link
-                      href="/admin/dashboard"
-                      onClick={() => setUserDropdownOpen(false)}
-                      className="px-4 py-2 text-xs text-slate-700 hover:bg-red-50 hover:text-[#D71920] flex items-center gap-2 font-medium"
-                    >
-                      <KeyRound className="w-3.5 h-3.5 text-[#D71920]" />
-                      <span>Admin Control Center</span>
-                    </Link>
+                      {(currentUser.role === 'owner' || currentUser.role === 'admin') && (
+                        <Link
+                          href="/owner/dashboard"
+                          onClick={() => setUserDropdownOpen(false)}
+                          className="px-4 py-2 text-xs text-slate-700 hover:bg-red-50 hover:text-[#D71920] flex items-center gap-2.5 font-semibold"
+                        >
+                          <Building2 className="w-3.5 h-3.5 text-[#D71920]" />
+                          <span>Host Fleet Dashboard</span>
+                        </Link>
+                      )}
+
+                      {currentUser.role === 'admin' && (
+                        <Link
+                          href="/admin/dashboard"
+                          onClick={() => setUserDropdownOpen(false)}
+                          className="px-4 py-2 text-xs text-slate-700 hover:bg-red-50 hover:text-[#D71920] flex items-center gap-2.5 font-semibold"
+                        >
+                          <KeyRound className="w-3.5 h-3.5 text-[#D71920]" />
+                          <span>Admin Control Center</span>
+                        </Link>
+                      )}
+                    </div>
+
+                    <div className="pt-1 border-t border-slate-100 px-1">
+                      <button
+                        onClick={handleLogout}
+                        className="w-full px-3 py-2 text-xs text-rose-600 hover:bg-rose-50 rounded-xl flex items-center gap-2 font-bold cursor-pointer transition"
+                      >
+                        <LogOut className="w-3.5 h-3.5 text-rose-500" />
+                        <span>Sign Out / Log Out</span>
+                      </button>
+                    </div>
                   </div>
-
-                  <div className="pt-1 border-t border-slate-100 px-1">
-                    <button
-                      onClick={() => {
-                        logout();
-                        setUserDropdownOpen(false);
-                      }}
-                      className="w-full px-3 py-2 text-xs text-rose-600 hover:bg-rose-50 rounded-xl flex items-center gap-2 font-bold cursor-pointer transition"
-                    >
-                      <LogOut className="w-3.5 h-3.5 text-rose-500" />
-                      <span>Sign Out / Log Out</span>
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            ) : (
+              /* If Logged Out: Show Sign In / Login Button */
+              <Link
+                href="/auth/login"
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-slate-800 hover:text-[#D71920] hover:bg-red-50 border border-slate-200 transition shadow-xs"
+              >
+                <LogIn className="w-4 h-4 text-[#D71920]" />
+                <span>Sign In / Login</span>
+              </Link>
+            )}
 
             {/* Primary Action Button */}
             <Link
-              href="/customer/dashboard"
+              href={currentUser ? "/customer/dashboard" : "/cars"}
               className="px-4 py-2.5 rounded-xl bg-[#D71920] text-white text-xs font-black hover:bg-[#b8141a] transition shadow-md shadow-[#D71920]/25 flex items-center gap-1.5 whitespace-nowrap"
             >
               <User className="w-3.5 h-3.5" />
-              <span>My Bookings</span>
+              <span>{currentUser ? "My Bookings" : "Book a Car"}</span>
             </Link>
 
           </div>
 
           {/* Mobile menu trigger */}
           <div className="lg:hidden flex items-center gap-2">
-            <Link
-              href="/auth/login"
-              className="px-3 py-1.5 rounded-xl bg-red-50 text-[#D71920] text-xs font-bold flex items-center gap-1 border border-red-200"
-            >
-              <LogIn className="w-3.5 h-3.5" />
-              <span>Login</span>
-            </Link>
+            {!currentUser && (
+              <Link
+                href="/auth/login"
+                className="px-3 py-1.5 rounded-xl bg-red-50 text-[#D71920] text-xs font-bold flex items-center gap-1 border border-red-200"
+              >
+                <LogIn className="w-3.5 h-3.5" />
+                <span>Login</span>
+              </Link>
+            )}
 
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -216,25 +233,45 @@ export default function Navbar() {
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="lg:hidden bg-white border-b border-slate-200 px-4 pt-2 pb-6 space-y-4">
+        <div className="lg:hidden bg-white border-b border-slate-200 px-4 pt-2 pb-6 space-y-4 font-montserrat">
           
-          {/* Mobile Sign In Header Card */}
-          <Link
-            href="/auth/login"
-            onClick={() => setMobileMenuOpen(false)}
-            className="flex items-center justify-between p-3.5 rounded-2xl bg-[#111111] text-white shadow-md"
-          >
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-full bg-[#D71920] text-white flex items-center justify-center font-bold text-xs">
-                <LogIn className="w-4 h-4" />
+          {/* Mobile User Status / Sign In Card */}
+          {currentUser ? (
+            <div className="p-3.5 rounded-2xl bg-slate-900 text-white shadow-md flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-full bg-[#D71920] text-white flex items-center justify-center font-black text-sm">
+                  {currentUser.full_name?.charAt(0).toUpperCase() || 'U'}
+                </div>
+                <div>
+                  <div className="font-extrabold text-xs">{currentUser.full_name || 'Driver'}</div>
+                  <div className="text-[10px] text-slate-400 truncate">{currentUser.email || currentUser.phone}</div>
+                </div>
               </div>
-              <div>
-                <div className="font-extrabold text-xs">Sign In / Register</div>
-                <div className="text-[10px] text-slate-400">Phone OTP & Email Magic Link</div>
-              </div>
+              <button
+                onClick={handleLogout}
+                className="px-2.5 py-1 rounded-lg bg-rose-900/40 text-rose-300 hover:text-white text-[11px] font-bold border border-rose-700/50"
+              >
+                Sign Out
+              </button>
             </div>
-            <span className="text-xs text-[#D71920] font-bold">Open →</span>
-          </Link>
+          ) : (
+            <Link
+              href="/auth/login"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center justify-between p-3.5 rounded-2xl bg-[#111111] text-white shadow-md"
+            >
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-full bg-[#D71920] text-white flex items-center justify-center font-bold text-xs">
+                  <LogIn className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="font-extrabold text-xs">Sign In / Register</div>
+                  <div className="text-[10px] text-slate-400">Phone OTP & Email Magic Link</div>
+                </div>
+              </div>
+              <span className="text-xs text-[#D71920] font-bold">Open →</span>
+            </Link>
+          )}
 
           <div className="grid grid-cols-1 gap-1 text-sm font-semibold text-slate-800">
             <Link href="/cars" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2.5 rounded-lg hover:bg-slate-100 flex items-center justify-between">
@@ -243,33 +280,22 @@ export default function Navbar() {
             <Link href="/hubs" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2.5 rounded-lg hover:bg-slate-100 text-[#D71920] flex items-center justify-between">
               <span>📍 Pickup Hubs & Map</span>
             </Link>
-            <Link href="/customer/dashboard" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2.5 rounded-lg hover:bg-slate-100 flex items-center justify-between">
-              <span>📋 My Bookings</span>
-            </Link>
-            <Link href="/customer/profile" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2.5 rounded-lg hover:bg-slate-100 flex items-center justify-between">
-              <span>🪪 KYC & Driving License</span>
-            </Link>
+            {currentUser && (
+              <>
+                <Link href="/customer/dashboard" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2.5 rounded-lg hover:bg-slate-100 flex items-center justify-between">
+                  <span>📋 My Bookings</span>
+                </Link>
+                <Link href="/customer/profile" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2.5 rounded-lg hover:bg-slate-100 flex items-center justify-between">
+                  <span>🪪 KYC & Driving License</span>
+                </Link>
+              </>
+            )}
             <Link href="/owner/dashboard" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2.5 rounded-lg hover:bg-slate-100 flex items-center justify-between">
               <span>🏢 Host Portal (Earn ₹40k+/mo)</span>
             </Link>
             <Link href="/admin/dashboard" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2.5 rounded-lg hover:bg-slate-100 flex items-center justify-between">
               <span>⚙️ Admin Control Center</span>
             </Link>
-            {currentUser && (
-              <button
-                onClick={() => {
-                  logout();
-                  setMobileMenuOpen(false);
-                }}
-                className="w-full mt-2 px-3 py-2.5 rounded-xl bg-rose-50 text-rose-600 font-bold text-xs flex items-center justify-between cursor-pointer"
-              >
-                <div className="flex items-center gap-2">
-                  <LogOut className="w-4 h-4 text-rose-500" />
-                  <span>Sign Out ({currentUser.full_name?.split(' ')[0] || 'User'})</span>
-                </div>
-                <span className="text-[10px] text-rose-400">Log out →</span>
-              </button>
-            )}
           </div>
         </div>
       )}
