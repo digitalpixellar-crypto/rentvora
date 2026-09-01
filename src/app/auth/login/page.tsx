@@ -254,10 +254,10 @@ function LoginPageInner() {
 
         if (error) {
           console.warn('Magic link error:', error.message);
-          // If Supabase SMTP rate limit is reached or magic link fails
+          const reason = error.message && error.message !== '{}' ? error.message : 'Supabase email service limit reached';
           setMessage({
             type: 'error',
-            text: `Could not send email link (${error.message}). You can sign in instantly with a password or one-click sign in below:`,
+            text: `${reason}. You can sign in instantly with one-click below, or switch to Password Sign In:`,
             actionLabel: `Instant Sign In as ${cleanEmail.split('@')[0]} →`,
             action: () => {
               setCurrentUserRole('customer', {
