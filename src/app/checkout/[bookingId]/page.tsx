@@ -34,7 +34,7 @@ export default function CheckoutPage() {
   const booking = bookings.find(b => b.id === bookingId);
 
   const [paymentMethod, setPaymentMethod] = useState<'UPI' | 'CARD' | 'NETBANKING'>('UPI');
-  const [upiId, setUpiId] = useState('pavan.kalyan@okaxis');
+  const [upiId, setUpiId] = useState('');
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

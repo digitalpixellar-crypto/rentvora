@@ -44,9 +44,12 @@ export default function OwnerDashboardPage() {
 
   const currentSelectedCar = ownerCars.find(c => c.id === selectedCarId) || ownerCars[0];
 
-  // Generate 28 upcoming calendar days starting from today (Sept 1, 2026)
+  // Generate 28 upcoming calendar days starting from today (dynamic)
   const calendarDays = Array.from({ length: 28 }, (_, i) => {
-    const d = new Date(2026, 8, 1 + i); // Sept 1, 2026
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const d = new Date(today);
+    d.setDate(today.getDate() + i);
     const iso = d.toISOString().split('T')[0];
     const dayNum = d.getDate();
     const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });

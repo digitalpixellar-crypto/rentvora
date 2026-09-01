@@ -31,22 +31,32 @@ export default function CustomerProfilePage() {
 
   // Profile Picture State
   const [avatarUrl, setAvatarUrl] = useState<string>(currentUser?.avatar_url || '');
-  const [fullName, setFullName] = useState<string>(currentUser?.full_name || 'Yeswanth Reddy');
-  const [phone, setPhone] = useState<string>(currentUser?.phone || '+91 78938 17322');
-  const [email, setEmail] = useState<string>(currentUser?.email || 'yeswanthreddykarnapu@gmail.com');
+  const [fullName, setFullName] = useState<string>(currentUser?.full_name || '');
+  const [phone, setPhone] = useState<string>(currentUser?.phone || '');
+  const [email, setEmail] = useState<string>(currentUser?.email || '');
   const [city, setCity] = useState<string>('Proddatur, AP');
-  const [emergencyContactName, setEmergencyContactName] = useState('Suresh Reddy (Brother)');
-  const [emergencyContactPhone, setEmergencyContactPhone] = useState('+91 98490 55443');
+  const [emergencyContactName, setEmergencyContactName] = useState('');
+  const [emergencyContactPhone, setEmergencyContactPhone] = useState('');
 
   // Driving License State
-  const [dlNumber, setDlNumber] = useState('AP04 20220009876');
-  const [dlExpiryDate, setDlExpiryDate] = useState('2038-08-20');
-  const [dlFrontUploaded, setDlFrontUploaded] = useState(true);
-  const [dlBackUploaded, setDlBackUploaded] = useState(true);
-  const [aadhaarUploaded, setAadhaarUploaded] = useState(true);
+  const [dlNumber, setDlNumber] = useState('');
+  const [dlExpiryDate, setDlExpiryDate] = useState('');
+  const [dlFrontUploaded, setDlFrontUploaded] = useState(false);
+  const [dlBackUploaded, setDlBackUploaded] = useState(false);
+  const [aadhaarUploaded, setAadhaarUploaded] = useState(false);
 
   const [saving, setSaving] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
+
+  // Sync form fields when currentUser loads asynchronously
+  React.useEffect(() => {
+    if (currentUser) {
+      setFullName(prev => prev || currentUser.full_name || '');
+      setPhone(prev => prev || currentUser.phone || '');
+      setEmail(prev => prev || currentUser.email || '');
+      setAvatarUrl(prev => prev || currentUser.avatar_url || '');
+    }
+  }, [currentUser]);
 
   // Handle Profile Picture File Selection
   const handleAvatarFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {

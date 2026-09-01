@@ -35,7 +35,7 @@ function CarDetailsContent() {
   const searchParams = useSearchParams();
   const slug = params.slug as string;
 
-  const { cars, locations, reviews, getCarBySlug, checkAvailability, createBooking, commissionRate } = useMarketplace();
+  const { cars, locations, reviews, getCarBySlug, checkAvailability, createBooking, commissionRate, currentUser } = useMarketplace();
   const car = getCarBySlug(slug);
 
   // Active Image Gallery state
@@ -65,10 +65,10 @@ function CarDetailsContent() {
   const [deliveryAddress, setDeliveryAddress] = useState('');
   const [selectedPickupLocationId, setSelectedPickupLocationId] = useState(car?.location_id || locations[0]?.id || '');
 
-  // Customer contact state for quick booking
-  const [customerName, setCustomerName] = useState('Pavan Kalyan M');
-  const [customerEmail, setCustomerEmail] = useState('pavan.kalyan@gmail.com');
-  const [customerPhone, setCustomerPhone] = useState('+91 91234 56780');
+  // Customer contact state — auto-filled from logged-in user profile
+  const [customerName, setCustomerName] = useState(currentUser?.full_name || '');
+  const [customerEmail, setCustomerEmail] = useState(currentUser?.email || '');
+  const [customerPhone, setCustomerPhone] = useState(currentUser?.phone || '');
 
   const [bookingLoading, setBookingLoading] = useState(false);
   const [bookingError, setBookingError] = useState<string | null>(null);
