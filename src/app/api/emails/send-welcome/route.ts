@@ -10,7 +10,7 @@ export async function POST(request: Request) {
     }
 
     const resendApiKey = process.env.RESEND_API_KEY;
-    const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+    const fromEmail = process.env.RESEND_FROM_EMAIL || 'RENTVORA <support@rentvora.in>';
     const name = fullName || 'Driver';
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://rentvora.in';
 
