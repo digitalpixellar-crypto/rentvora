@@ -1,7 +1,6 @@
-﻿const CACHE_NAME = 'rentvora-pwa-v1';
+const CACHE_NAME = 'rentvora-pwa-v2';
 const ASSETS_TO_CACHE = [
   '/',
-  '/cars',
   '/manifest.json',
   '/images/rentvora-logo.png'
 ];
@@ -32,6 +31,14 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
+  const url = new URL(event.request.url);
+
+  // Never cache auth, api, or dashboard routes in service worker
+  if (url.pathname.startsWith('/auth') || url.pathname.startsWith('/api') || url.pathname.startsWith('/customer') || url.pathname.startsWith('/owner') || url.pathname.startsWith('/admin')) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
   event.respondWith(
     fetch(event.request).catch(() => {
       return caches.match(event.request);
