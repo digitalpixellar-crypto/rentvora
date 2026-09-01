@@ -255,6 +255,21 @@ export default function Navbar() {
             <Link href="/admin/dashboard" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2.5 rounded-lg hover:bg-slate-100 flex items-center justify-between">
               <span>⚙️ Admin Control Center</span>
             </Link>
+            {currentUser && (
+              <button
+                onClick={() => {
+                  logout();
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full mt-2 px-3 py-2.5 rounded-xl bg-rose-50 text-rose-600 font-bold text-xs flex items-center justify-between cursor-pointer"
+              >
+                <div className="flex items-center gap-2">
+                  <LogOut className="w-4 h-4 text-rose-500" />
+                  <span>Sign Out ({currentUser.full_name?.split(' ')[0] || 'User'})</span>
+                </div>
+                <span className="text-[10px] text-rose-400">Log out →</span>
+              </button>
+            )}
           </div>
         </div>
       )}

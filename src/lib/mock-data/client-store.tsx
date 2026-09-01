@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Car, Booking, Location, Profile, OwnerProfile, Review, BookingQuote, UserRole } from '@/types';
 import { INITIAL_CARS, INITIAL_LOCATIONS, INITIAL_OWNERS, INITIAL_BOOKINGS, INITIAL_REVIEWS } from './store';
 import { calculateServerQuote } from '@/lib/pricing/calculator';
+import { createClient } from '@/lib/supabase/client';
 
 interface MarketplaceContextType {
   cars: Car[];
@@ -53,33 +54,89 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
   const [currentUser, setCurrentUser] = useState<Profile | null>(null);
   const [isAuthLoaded, setIsAuthLoaded] = useState<boolean>(false);
 
-  // Load state from localStorage on mount if available
+  // 1. On mount: load localStorage state AND sync Supabase session
   useEffect(() => {
-    try {
-      const savedCars = localStorage.getItem('rentvora_cars');
-      if (savedCars) setCars(JSON.parse(savedCars));
+    const supabase = createClient();
 
-      const savedBookings = localStorage.getItem('rentvora_bookings');
-      if (savedBookings) setBookings(JSON.parse(savedBookings));
+    const loadLocalData = () => {
+      try {
+        const savedCars = localStorage.getItem('rentvora_cars');
+        if (savedCars) setCars(JSON.parse(savedCars));
 
-      const savedLocations = localStorage.getItem('rentvora_locations');
-      if (savedLocations) setLocations(JSON.parse(savedLocations));
+        const savedBookings = localStorage.getItem('rentvora_bookings');
+        if (savedBookings) setBookings(JSON.parse(savedBookings));
 
-      const savedOwners = localStorage.getItem('rentvora_owners');
-      if (savedOwners) setOwners(JSON.parse(savedOwners));
+        const savedLocations = localStorage.getItem('rentvora_locations');
+        if (savedLocations) setLocations(JSON.parse(savedLocations));
 
-      const savedRate = localStorage.getItem('rentvora_commission');
-      if (savedRate) setCommissionRate(Number(savedRate));
+        const savedOwners = localStorage.getItem('rentvora_owners');
+        if (savedOwners) setOwners(JSON.parse(savedOwners));
 
-      const savedUser = localStorage.getItem('rentvora_user');
-      if (savedUser) {
-        setCurrentUser(JSON.parse(savedUser));
+        const savedRate = localStorage.getItem('rentvora_commission');
+        if (savedRate) setCommissionRate(Number(savedRate));
+      } catch (e) {
+        console.error('Failed to load local marketplace state', e);
       }
-    } catch (e) {
-      console.error('Failed to load local marketplace state', e);
-    } finally {
+    };
+
+    const buildProfileFromSupabaseUser = (sbUser: any): Profile => ({
+      id: sbUser.id,
+      email: sbUser.email || null,
+      full_name: sbUser.user_metadata?.full_name || sbUser.email?.split('@')[0] || 'Driver',
+      phone: sbUser.user_metadata?.phone || sbUser.phone || null,
+      role: (sbUser.user_metadata?.role as UserRole) || 'customer',
+      status: 'active',
+      created_at: sbUser.created_at || new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    });
+
+    // Load local data first
+    loadLocalData();
+
+    // 2. Get the initial Supabase session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        const profile = buildProfileFromSupabaseUser(session.user);
+        setCurrentUser(profile);
+        try {
+          localStorage.setItem('rentvora_user', JSON.stringify(profile));
+        } catch {}
+      } else {
+        // Fall back to stored user from localStorage
+        try {
+          const savedUser = localStorage.getItem('rentvora_user');
+          if (savedUser) setCurrentUser(JSON.parse(savedUser));
+        } catch {}
+      }
       setIsAuthLoaded(true);
-    }
+    }).catch(() => {
+      // If Supabase fails, still try localStorage
+      try {
+        const savedUser = localStorage.getItem('rentvora_user');
+        if (savedUser) setCurrentUser(JSON.parse(savedUser));
+      } catch {}
+      setIsAuthLoaded(true);
+    });
+
+    // 3. Subscribe to live auth state changes (login/logout from any tab)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        const profile = buildProfileFromSupabaseUser(session.user);
+        setCurrentUser(profile);
+        try {
+          localStorage.setItem('rentvora_user', JSON.stringify(profile));
+        } catch {}
+      } else if (event === 'SIGNED_OUT') {
+        setCurrentUser(null);
+        try {
+          localStorage.removeItem('rentvora_user');
+        } catch {}
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const saveState = (updatedCars?: Car[], updatedBookings?: Booking[], updatedLocs?: Location[], updatedOwners?: any[]) => {
@@ -101,7 +158,9 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
     setCurrentUser(null);
     try {
       localStorage.removeItem('rentvora_user');
@@ -112,7 +171,7 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     let userObj: Profile;
     if (role === 'admin') {
       userObj = {
-        id: 'usr-admin-1',
+        id: customUser?.id || 'usr-admin-1',
         email: customUser?.email || 'admin@rentvora.com',
         full_name: customUser?.full_name || 'Platform Administrator',
         phone: customUser?.phone || '+91 78938 17322',
@@ -131,7 +190,7 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
       userObj = {
         id: customUser?.id || 'usr-cust-' + Date.now(),
         email: customUser?.email || 'customer@rentvora.com',
-        full_name: customUser?.full_name || 'Pavan Kalyan',
+        full_name: customUser?.full_name || 'Valued Driver',
         phone: customUser?.phone || '+91 78938 17322',
         role: 'customer',
         status: 'active',
@@ -155,21 +214,16 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     const reqStart = new Date(startTime).getTime();
     const reqEnd = new Date(endTime).getTime();
 
-    if (isNaN(reqStart) || isNaN(reqEnd) || reqEnd <= reqStart) return false;
-
-    // Check overlapping bookings
-    const hasOverlap = bookings.some(b => {
+    const conflict = bookings.some(b => {
       if (b.car_id !== carId) return false;
-      if (excludeBookingId && b.id === excludeBookingId) return false;
+      if (b.id === excludeBookingId) return false;
       if (['cancelled_by_customer', 'cancelled_by_owner', 'rejected', 'refunded'].includes(b.status)) return false;
-
       const bStart = new Date(b.start_time).getTime();
       const bEnd = new Date(b.end_time).getTime();
-
-      return (reqStart < bEnd && reqEnd > bStart);
+      return reqStart < bEnd && reqEnd > bStart;
     });
 
-    return !hasOverlap;
+    return !conflict;
   };
 
   const createBooking = async (params: {
@@ -182,201 +236,143 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     customerName: string;
     customerEmail: string;
     customerPhone: string;
-  }) => {
+  }): Promise<{ booking: Booking; quote: BookingQuote }> => {
     const car = getCarById(params.carId);
     if (!car) throw new Error('Car not found');
 
-    const isAvailable = checkAvailability(params.carId, params.startTime, params.endTime);
-    if (!isAvailable) {
-      throw new Error('Vehicle is already booked or unavailable for the selected dates/times.');
-    }
-
-    // Calculate server quote
+    const pickupLoc = locations.find(l => l.id === params.pickupLocationId) || locations[0];
     const quote = calculateServerQuote({
       pricePerDay: car.price_per_day,
-      pricePerHour: car.price_per_hour,
-      securityDeposit: car.security_deposit,
-      deliveryAvailable: car.delivery_available,
-      deliveryCharges: car.delivery_charges,
+      securityDeposit: car.security_deposit || 3000,
+      deliveryAvailable: true,
       deliveryRequested: params.deliveryRequested,
       startTime: params.startTime,
       endTime: params.endTime,
-      customCommissionRate: commissionRate,
     });
 
-    const seq = bookings.length + 101;
-    const bookingRef = `PRD-2026-${String(seq).padStart(6, '0')}`;
-
     const newBooking: Booking = {
-      id: `bk-prd-${Date.now()}`,
-      booking_reference: bookingRef,
-      customer_id: currentUser?.id || `usr-cust-${Date.now()}`,
-      owner_id: car.owner_id,
-      car_id: car.id,
-      pickup_location_id: params.pickupLocationId,
-      start_time: params.startTime,
-      end_time: params.endTime,
-      duration_hours: quote.duration_hours,
-      rental_type: 'self_drive',
-      delivery_requested: params.deliveryRequested,
-      delivery_address: params.deliveryAddress,
-      base_rental_amount: quote.base_rental_amount,
-      delivery_amount: quote.delivery_amount,
-      taxes_fees_amount: quote.taxes_fees_amount,
-      security_deposit_amount: quote.security_deposit_amount,
-      total_amount: quote.total_amount,
-      platform_commission_rate: commissionRate,
-      platform_commission_amount: quote.platform_commission_amount,
-      owner_earnings_amount: quote.owner_earnings_amount,
-      status: 'pending_payment',
-      created_at: new Date().toISOString(),
-      car: car,
-      pickup_location: locations.find(l => l.id === params.pickupLocationId) || locations[0],
+      id: 'bk-' + Date.now(),
+      booking_reference: 'RV-' + Date.now().toString().slice(-6),
+      car_id: params.carId,
+      car,
+      customer_id: currentUser?.id || 'guest',
       customer: {
-        id: currentUser?.id || 'usr-cust-new',
-        email: params.customerEmail,
+        id: currentUser?.id || 'guest',
         full_name: params.customerName,
+        email: params.customerEmail,
         phone: params.customerPhone,
         role: 'customer',
         status: 'active',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-      }
+      },
+      owner_id: car.owner_id || owners[0]?.id,
+      owner: owners[0],
+      pickup_location_id: params.pickupLocationId,
+      pickup_location: pickupLoc,
+      start_time: params.startTime,
+      end_time: params.endTime,
+      duration_hours: quote.duration_hours,
+      rental_type: 'self_drive',
+      status: 'pending_payment',
+      base_rental_amount: quote.base_rental_amount,
+      driver_allowance_amount: 0,
+      taxes_fees_amount: quote.taxes_fees_amount,
+      platform_commission_rate: commissionRate,
+      platform_commission_amount: quote.platform_commission_amount,
+      owner_earnings_amount: quote.owner_earnings_amount,
+      security_deposit_amount: quote.security_deposit_amount,
+      delivery_amount: quote.delivery_amount || 0,
+      total_amount: quote.total_amount,
+      delivery_requested: params.deliveryRequested,
+      delivery_address: params.deliveryAddress,
+      created_at: new Date().toISOString(),
     };
 
-    const updatedBookings = [newBooking, ...bookings];
+
+    const updatedBookings = [...bookings, newBooking];
     saveState(undefined, updatedBookings);
     return { booking: newBooking, quote };
   };
 
-  const confirmPayment = async (bookingId: string, paymentMethod: string = 'UPI') => {
-    const updated = bookings.map(b => {
+  const confirmPayment = async (bookingId: string, paymentMethod: string = 'cashfree_upi'): Promise<Booking> => {
+    const updatedBookings = bookings.map(b => {
       if (b.id === bookingId) {
-        return {
-          ...b,
-          status: 'confirmed' as const,
-          payment: {
-            id: `pay-${Date.now()}`,
-            order_id: `order_${b.booking_reference}_${Date.now()}`,
-            status: 'successful',
-            payment_method: paymentMethod,
-          }
-        };
+        return { ...b, status: 'confirmed' as Booking['status'], payment_method: paymentMethod, updated_at: new Date().toISOString() };
       }
       return b;
     });
-
-    saveState(undefined, updated);
-    const confirmed = updated.find(b => b.id === bookingId);
-    if (!confirmed) throw new Error('Booking not found');
-    return confirmed;
+    saveState(undefined, updatedBookings);
+    return updatedBookings.find(b => b.id === bookingId)!;
   };
 
-  const cancelBooking = async (bookingId: string, reason: string, cancelledByRole: 'customer' | 'owner' | 'admin') => {
-    const booking = bookings.find(b => b.id === bookingId);
-    if (!booking) throw new Error('Booking not found');
-
-    const hoursUntilStart = (new Date(booking.start_time).getTime() - Date.now()) / (1000 * 60 * 60);
-    let cancellationFee = 0;
-    let refundAmount = booking.total_amount;
-
-    if (cancelledByRole === 'customer') {
-      if (hoursUntilStart < 24) {
-        cancellationFee = Math.round(booking.base_rental_amount * 0.20);
-        refundAmount = booking.total_amount - cancellationFee;
-      }
-    }
-
-    const updated = bookings.map(b => {
+  const cancelBooking = async (bookingId: string, reason: string, cancelledByRole: 'customer' | 'owner' | 'admin'): Promise<Booking> => {
+    const updatedBookings = bookings.map(b => {
       if (b.id === bookingId) {
-        return {
-          ...b,
-          status: (cancelledByRole === 'owner' ? 'cancelled_by_owner' : 'cancelled_by_customer') as any,
-          cancellation_reason: reason,
-          cancellation_fee: cancellationFee,
-          refund_amount: refundAmount,
-        };
+        const cancelStatus = cancelledByRole === 'customer' ? 'cancelled_by_customer' : cancelledByRole === 'owner' ? 'cancelled_by_owner' : 'refunded';
+        const refundAmt = cancelledByRole === 'admin' ? b.total_amount : b.base_rental_amount * 0.8;
+        return { ...b, status: cancelStatus as Booking['status'], cancellation_reason: reason, refund_amount: refundAmt, updated_at: new Date().toISOString() };
       }
       return b;
     });
-
-    saveState(undefined, updated);
-    return updated.find(b => b.id === bookingId)!;
+    saveState(undefined, updatedBookings);
+    return updatedBookings.find(b => b.id === bookingId)!;
   };
 
-  const addCar = async (carData: Partial<Car>) => {
+  const addCar = async (carData: Partial<Car>): Promise<Car> => {
+    const locId = carData.location_id || locations[0]?.id || 'loc-1';
     const newCar: Car = {
-      id: `car-prd-${Date.now()}`,
-      owner_id: currentUser?.id || 'usr-owner-1',
-      location_id: carData.location_id || locations[0].id,
-      brand: carData.brand || 'Maruti Suzuki',
-      model: carData.model || 'Swift',
-      variant: carData.variant || 'VXi',
-      year: carData.year || 2024,
-      registration_number: carData.registration_number || `AP 04 XX ${Math.floor(1000 + Math.random() * 9000)}`,
+      id: 'car-' + Date.now(),
+      slug: (carData.brand || 'car').toLowerCase() + '-' + (carData.model || 'vehicle').toLowerCase() + '-' + Date.now(),
+      owner_id: carData.owner_id || owners[0]?.id || 'owner-1',
+      location_id: locId,
+      location: locations.find(l => l.id === locId) || locations[0],
+      brand: carData.brand || 'Unknown',
+      model: carData.model || 'Vehicle',
+      variant: carData.variant,
+      year: carData.year || 2022,
+      registration_number: carData.registration_number || 'AP00XX0000',
       fuel_type: carData.fuel_type || 'petrol',
       transmission: carData.transmission || 'manual',
       category: carData.category || 'hatchback',
       seating_capacity: carData.seating_capacity || 5,
       color: carData.color || 'White',
-      kilometer_reading: carData.kilometer_reading || 10000,
-      price_per_day: carData.price_per_day || 2000,
-      price_per_hour: carData.price_per_hour || 150,
-      security_deposit: carData.security_deposit || 2000,
-      min_rental_hours: carData.min_rental_hours || 12,
+      kilometer_reading: carData.kilometer_reading || 0,
+      mileage_kmpl: carData.mileage_kmpl || 15,
+      price_per_day: carData.price_per_day || 1500,
+      price_per_hour: carData.price_per_hour,
+      security_deposit: carData.security_deposit || 3000,
+      min_rental_hours: carData.min_rental_hours || 4,
       max_rental_days: carData.max_rental_days || 30,
       delivery_available: carData.delivery_available ?? true,
-      delivery_charges: carData.delivery_charges || 200,
-      description: carData.description || 'Verified rental car in Proddatur.',
-      features: carData.features || ['Air Conditioning', 'Power Steering', 'Bluetooth Audio'],
+      delivery_charges: carData.delivery_charges || 0,
+      description: carData.description || '',
       approval_status: 'pending_approval',
-      slug: `${(carData.brand || 'car').toLowerCase()}-${(carData.model || 'rental').toLowerCase()}-proddatur-${Date.now()}`,
-      images: carData.images?.length ? carData.images : [
-        { id: 'img-new-1', image_url: 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=900&auto=format&fit=crop&q=80', is_primary: true }
-      ],
+      features: carData.features || [],
+      images: carData.images || [],
+      rating: 0,
+      total_reviews: 0,
       created_at: new Date().toISOString(),
     };
-
-    const updated = [newCar, ...cars];
-    saveState(updated);
+    const updatedCars = [...cars, newCar];
+    saveState(updatedCars);
     return newCar;
   };
 
-  const updateCarStatus = async (carId: string, status: Car['approval_status'], reason?: string) => {
-    const updated = cars.map(c => {
-      if (c.id === carId) {
-        return { ...c, approval_status: status, rejection_reason: reason };
-      }
-      return c;
-    });
-    saveState(updated);
+  const updateCarStatus = async (carId: string, status: Car['approval_status'], reason?: string): Promise<void> => {
+    const updatedCars = cars.map(c => c.id === carId ? { ...c, approval_status: status, updated_at: new Date().toISOString() } : c);
+    saveState(updatedCars);
   };
 
-  const updateOwnerKycStatus = async (ownerId: string, status: OwnerProfile['kyc_status'], reason?: string) => {
-    const updated = owners.map(o => {
-      if (o.id === ownerId) {
-        return {
-          ...o,
-          owner_profile: {
-            ...o.owner_profile,
-            kyc_status: status,
-            rejection_reason: reason,
-            verified_at: status === 'approved' ? new Date().toISOString() : undefined,
-          }
-        };
-      }
-      return o;
-    });
-    saveState(undefined, undefined, undefined, updated);
+  const updateOwnerKycStatus = async (ownerId: string, status: OwnerProfile['kyc_status'], reason?: string): Promise<void> => {
+    const updatedOwners = owners.map(o => o.id === ownerId ? { ...o, owner_profile: { ...o.owner_profile, kyc_status: status, verified_at: new Date().toISOString() } } : o);
+    saveState(undefined, undefined, undefined, updatedOwners);
   };
 
-  const addLocation = async (locData: Omit<Location, 'id'>) => {
-    const newLoc: Location = {
-      ...locData,
-      id: `loc-${Date.now()}`,
-    };
-    const updated = [...locations, newLoc];
-    saveState(undefined, undefined, updated);
+  const addLocation = async (locData: Omit<Location, 'id'>): Promise<Location> => {
+    const newLoc: Location = { id: 'loc-' + Date.now(), ...locData };
+    const updatedLocs = [...locations, newLoc];
+    saveState(undefined, undefined, updatedLocs);
     return newLoc;
   };
 
@@ -385,23 +381,28 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     localStorage.setItem('rentvora_commission', String(newRate));
   };
 
-  const addReview = async (params: { bookingId: string; carId: string; rating: number; comment: string }) => {
+  const addReview = async (params: { bookingId: string; carId: string; rating: number; comment: string }): Promise<Review> => {
     const newRev: Review = {
-      id: `rev-${Date.now()}`,
+      id: 'rev-' + Date.now(),
       booking_id: params.bookingId,
       car_id: params.carId,
-      customer_id: currentUser?.id || 'usr-cust-1',
-      owner_id: getCarById(params.carId)?.owner_id || 'usr-owner-1',
+      customer_id: currentUser?.id || 'guest',
+      owner_id: cars.find(c => c.id === params.carId)?.owner_id || owners[0]?.id || 'owner-1',
+      customer: currentUser ? { full_name: currentUser.full_name } : undefined,
       rating: params.rating,
       comment: params.comment,
       created_at: new Date().toISOString(),
-      customer: {
-        full_name: currentUser?.full_name || 'Verified Customer',
-        avatar_url: currentUser?.avatar_url,
-      }
     };
-    const updated = [newRev, ...reviews];
-    setReviews(updated);
+    setReviews(prev => [...prev, newRev]);
+    const updatedCars = cars.map(c => {
+      if (c.id === params.carId) {
+        const allCarRevs = [...reviews.filter(r => r.car_id === c.id), newRev];
+        const avgRating = allCarRevs.reduce((sum, r) => sum + r.rating, 0) / allCarRevs.length;
+        return { ...c, rating: Math.round(avgRating * 10) / 10, total_reviews: allCarRevs.length };
+      }
+      return c;
+    });
+    saveState(updatedCars);
     return newRev;
   };
 
@@ -437,8 +438,8 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
   );
 }
 
-export function useMarketplace() {
+export function useMarketplace(): MarketplaceContextType {
   const ctx = useContext(MarketplaceContext);
-  if (!ctx) throw new Error('useMarketplace must be used within MarketplaceProvider');
+  if (!ctx) throw new Error('useMarketplace must be used inside MarketplaceProvider');
   return ctx;
 }

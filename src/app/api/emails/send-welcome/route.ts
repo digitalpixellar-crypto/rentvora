@@ -10,11 +10,15 @@ export async function POST(request: Request) {
     }
 
     const resendApiKey = process.env.RESEND_API_KEY;
-    const fromEmail = process.env.RESEND_FROM_EMAIL || 'RENTVORA <onboarding@resend.dev>';
+    const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
     const name = fullName || 'Driver';
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://rentvora.vercel.app';
 
-    // Premium HTML Welcome Template
+    // NOTE: When using onboarding@resend.dev (Resend sandbox/free tier),
+    // emails can ONLY be sent to your own verified Resend account email.
+    // To send to ANY email, add a verified domain in Resend dashboard:
+    // https://resend.com/domains → Add domain → set RESEND_FROM_EMAIL=noreply@yourdomain.com
+
     const htmlContent = '<!DOCTYPE html>' +
       '<html>' +
       '<head>' +
@@ -47,51 +51,63 @@ export async function POST(request: Request) {
           '<div class="content">' +
             '<h2 class="greeting">Namaste, ' + name + '! &#128075;</h2>' +
             '<p class="text">' +
-              'Welcome to <strong>RENTVORA</strong> &mdash; Andhra Pradesh premier peer-to-peer car rental platform. Your account is now active and ready for self-drive and chauffeur bookings.' +
+              'Welcome to <strong>RENTVORA</strong> &mdash; Andhra Pradesh\'s premier peer-to-peer car rental platform. Your account is now active and ready for self-drive and chauffeur bookings across Proddatur, Kadapa, and Tirupati.' +
             '</p>' +
             '<div class="card">' +
               '<div style="font-weight: 800; font-size: 13px; color: #D71920; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;">&#9889; 3 Quick Steps to Your First Drive:</div>' +
               '<div class="card-item">&#129530; <strong>1. Upload Driving License (DL):</strong> Verify your license once in your profile for instant 1-click rentals.</div>' +
               '<div class="card-item">&#128663; <strong>2. Choose Self-Drive or Driver:</strong> Pick from our verified hatchbacks, SUVs, and 7-seaters.</div>' +
-              '<div class="card-item">&#128205; <strong>3. Pickup in Proddatur:</strong> Collect your sanitized car at Proddatur RTC Bus Stand, Gandhi Road, or get doorstep delivery.</div>' +
+              '<div class="card-item">&#128205; <strong>3. Pickup in Proddatur:</strong> Collect your sanitized car at RTC Bus Stand, Gandhi Road, or get doorstep delivery.</div>' +
             '</div>' +
             '<a href="' + appUrl + '/cars" class="cta-button">Explore Available Cars Now &rarr;</a>' +
             '<p style="font-size: 12px; color: #64748b; text-align: center; margin: 0;">' +
-              'Need immediate support? WhatsApp us anytime at <strong>+91 78938 17322</strong>.' +
+              'Need immediate support? WhatsApp us at <strong>+91 78938 17322</strong>.' +
             '</p>' +
           '</div>' +
           '<div class="footer">' +
-            'RENTVORA Self-Drive Car Rentals &bull; Proddatur, Kadapa & Andhra Pradesh<br>' +
+            'RENTVORA Self-Drive Car Rentals &bull; Proddatur, Kadapa &amp; Andhra Pradesh<br>' +
             'Official Support: +91 78938 17322 &bull; support@rentvora.com' +
           '</div>' +
         '</div>' +
       '</body>' +
       '</html>';
 
-    if (resendApiKey) {
-      const resendResponse = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          'Authorization': 'Bearer ' + resendApiKey,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          from: fromEmail,
-          to: [email],
-          subject: '🎉 Welcome to RENTVORA — Your Account is Ready!',
-          html: htmlContent,
-        }),
+    if (!resendApiKey) {
+      return NextResponse.json({ 
+        success: true, 
+        mode: 'simulated', 
+        message: 'RESEND_API_KEY not set. Welcome email simulated for ' + email + '.' 
       });
-
-      const resendData = await resendResponse.json();
-      return NextResponse.json({ success: true, resendId: resendData.id, mode: 'live' });
     }
 
-    return NextResponse.json({ 
-      success: true, 
-      mode: 'simulated', 
-      message: 'Welcome email prepared for ' + email + '. Add RESEND_API_KEY to send live.' 
+    const resendResponse = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + resendApiKey,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: fromEmail,
+        to: [email],
+        subject: '🎉 Welcome to RENTVORA — Your Account is Ready!',
+        html: htmlContent,
+      }),
     });
+
+    const resendData = await resendResponse.json();
+
+    if (!resendResponse.ok) {
+      // Resend returned an error (e.g. sandbox restriction: can only send to verified email)
+      console.error('Resend API error:', resendData);
+      return NextResponse.json({ 
+        success: false, 
+        mode: 'resend_error',
+        error: resendData.message || 'Resend API error',
+        hint: 'If using onboarding@resend.dev, you can only send to your verified Resend account email. Add a custom domain at resend.com/domains to send to any email.'
+      }, { status: 422 });
+    }
+
+    return NextResponse.json({ success: true, resendId: resendData.id, mode: 'live' });
 
   } catch (error: any) {
     console.error('Welcome email error:', error);

@@ -1,4 +1,4 @@
-﻿-- =============================================================================
+-- =============================================================================
 -- RENTVORA CAR RENTAL MARKETPLACE - INITIAL SCHEMA
 -- Database: Supabase PostgreSQL (Supports Proddatur -> Kadapa -> AP -> India)
 -- =============================================================================
@@ -10,9 +10,9 @@ CREATE TYPE user_status AS ENUM ('active', 'suspended', 'pending_verification');
 
 CREATE TABLE IF NOT EXISTS public.profiles (
     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-    email TEXT UNIQUE NOT NULL,
-    full_name TEXT NOT NULL,
-    phone TEXT UNIQUE NOT NULL,
+    email TEXT UNIQUE,
+    full_name TEXT NOT NULL DEFAULT 'Valued Driver',
+    phone TEXT UNIQUE,
     role user_role DEFAULT 'customer' NOT NULL,
     status user_status DEFAULT 'active' NOT NULL,
     avatar_url TEXT,
