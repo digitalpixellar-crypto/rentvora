@@ -11,6 +11,7 @@ import { useMarketplace } from '@/lib/mock-data/client-store';
 function CarsContent() {
   const searchParams = useSearchParams();
   const locationParam = searchParams.get('location') || '';
+  const rentalTypeParam = searchParams.get('rentalType') === 'with_driver' ? 'with_driver' : 'self_drive';
   const { cars, locations } = useMarketplace();
 
   const [sortBy, setSortBy] = useState<'recommended' | 'price_low' | 'price_high' | 'rating'>('recommended');
@@ -162,7 +163,7 @@ function CarsContent() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
               {filteredCars.map((car) => (
-                <CarCard key={car.id} car={car} />
+                <CarCard key={car.id} car={car} rentalType={rentalTypeParam} />
               ))}
             </div>
           )}

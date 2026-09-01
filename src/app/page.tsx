@@ -9,7 +9,10 @@ import {
   CreditCard, 
   Sparkles, 
   ArrowRight, 
-  CheckCircle2
+  CheckCircle2,
+  UserCheck,
+  Compass,
+  HeartHandshake
 } from 'lucide-react';
 import SearchBar from '@/components/marketplace/SearchBar';
 import CarCard from '@/components/marketplace/CarCard';
@@ -21,7 +24,7 @@ export default function HomePage() {
   const approvedCars = cars.filter(c => c.approval_status === 'approved');
 
   return (
-    <div className="space-y-20 pb-20">
+    <div className="space-y-20 pb-20 font-montserrat">
       
       {/* 1. HERO SECTION - Sleek Carbon Black & Crimson Red */}
       <section className="relative bg-gradient-to-b from-slate-950 via-slate-900 to-black text-white pt-16 pb-28 px-4 sm:px-6 lg:px-8 overflow-hidden">
@@ -31,15 +34,15 @@ export default function HomePage() {
         <div className="relative max-w-5xl mx-auto text-center space-y-6">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-red-600/20 border border-red-500/40 text-red-400 text-xs font-extrabold tracking-widest uppercase">
             <Sparkles className="w-3.5 h-3.5 text-red-500" />
-            <span>#1 Self-Drive Car Rental in Proddatur, AP</span>
+            <span>🚗 Self-Drive &amp; 👨‍✈️ With-Driver Car Rentals in Andhra Pradesh</span>
           </div>
 
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-tight sm:leading-tight">
-            Rent Verified Self-Drive Cars in <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-red-400 to-rose-300">Proddatur</span>
+            Self-Drive &amp; Chauffeur Cars in <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-red-400 to-rose-300">Proddatur</span>
           </h1>
 
           <p className="text-slate-300 text-sm sm:text-lg max-w-2xl mx-auto leading-relaxed">
-            Zero security deposit hassle, spotless sanitized fleet, transparent pricing, and instant booking at Proddatur RTC Bus Stand, Gandhi Road & doorstep delivery.
+            Drive yourself with 100% privacy <strong>OR</strong> relax with a verified professional chauffeur. Spotless sanitized fleet, instant booking at Proddatur RTC Bus Stand &amp; doorstep delivery.
           </p>
 
           {/* Search Box Component */}
@@ -71,7 +74,7 @@ export default function HomePage() {
             <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">Verified AP Cars</div>
           </div>
           <div className="space-y-1 border-l border-slate-100">
-            <div className="text-2xl sm:text-3xl font-black text-red-600">4.9 ★</div>
+            <div className="text-2xl sm:text-3xl font-black text-[#D71920]">4.9 ★</div>
             <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">Average Renter Rating</div>
           </div>
           <div className="space-y-1 border-l border-slate-100">
@@ -79,8 +82,100 @@ export default function HomePage() {
             <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">Deposit Refund Guarantee</div>
           </div>
           <div className="space-y-1 border-l border-slate-100">
-            <div className="text-2xl sm:text-3xl font-black text-red-600">24/7</div>
+            <div className="text-2xl sm:text-3xl font-black text-[#D71920]">24/7</div>
             <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">Local Support Helpline</div>
+          </div>
+        </div>
+      </section>
+
+      {/* 2.5. TWO TRAVEL OPTIONS SHOWCASE (SELF-DRIVE VS WITH-DRIVER) */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+        <div className="text-center max-w-2xl mx-auto space-y-2">
+          <span className="text-xs font-extrabold uppercase tracking-widest text-[#D71920]">Two Flexible Ways to Travel</span>
+          <h2 className="text-2xl sm:text-3xl font-black text-slate-950">Choose Your Driving Style</h2>
+          <p className="text-slate-500 text-xs sm:text-sm">Whether you want the freedom of driving yourself or the comfort of a dedicated driver, RENTVORA has you covered.</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+          {/* Card 1: Self-Drive */}
+          <div className="bg-gradient-to-br from-slate-900 to-slate-950 text-white rounded-3xl p-8 border border-slate-800 shadow-xl space-y-6 flex flex-col justify-between">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="w-12 h-12 rounded-2xl bg-white/10 text-white flex items-center justify-center font-black text-xl shadow-inner">
+                  🚗
+                </div>
+                <span className="px-3 py-1 rounded-full bg-white/10 text-white text-xs font-black uppercase tracking-wider border border-white/20">
+                  100% Privacy
+                </span>
+              </div>
+              <div>
+                <h3 className="text-xl sm:text-2xl font-black">Option 1: Self-Drive Rentals</h3>
+                <p className="text-xs sm:text-sm text-slate-300 mt-1">Take the steering wheel and travel on your own schedule with complete privacy.</p>
+              </div>
+
+              <div className="space-y-2.5 pt-2 text-xs font-semibold text-slate-200">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>Unlimited freedom &amp; privacy for family and couple trips</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>1-Click Indian Driving License verification (Zero paperwork)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>Instant self-pickup at RTC Bus Stand or doorstep delivery</span>
+                </div>
+              </div>
+            </div>
+
+            <Link
+              href="/cars?rentalType=self_drive"
+              className="w-full py-3.5 rounded-2xl bg-white hover:bg-slate-100 text-slate-950 font-black text-xs transition flex items-center justify-center gap-2 shadow-lg cursor-pointer"
+            >
+              <span>Explore Self-Drive Cars &rarr;</span>
+            </Link>
+          </div>
+
+          {/* Card 2: With Driver */}
+          <div className="bg-gradient-to-br from-[#1b0809] to-[#2d0e10] text-white rounded-3xl p-8 border border-red-900/60 shadow-xl space-y-6 flex flex-col justify-between">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="w-12 h-12 rounded-2xl bg-[#D71920] text-white flex items-center justify-center font-black text-xl shadow-lg shadow-[#D71920]/40">
+                  👨‍✈️
+                </div>
+                <span className="px-3 py-1 rounded-full bg-[#D71920]/30 text-red-200 text-xs font-black uppercase tracking-wider border border-red-500/40">
+                  +₹500/day Only
+                </span>
+              </div>
+              <div>
+                <h3 className="text-xl sm:text-2xl font-black">Option 2: With-Driver Chauffeur</h3>
+                <p className="text-xs sm:text-sm text-red-100 mt-1">Sit back, relax, and let our verified professional drivers handle the driving.</p>
+              </div>
+
+              <div className="space-y-2.5 pt-2 text-xs font-semibold text-red-100">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>Polite, background-verified local drivers across Rayalaseema</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>Zero driving fatigue for outstation trips (Tirupati, Bangalore, Hyderabad)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>Perfect for wedding functions, temple pilgrimages &amp; business travel</span>
+                </div>
+              </div>
+            </div>
+
+            <Link
+              href="/cars?rentalType=with_driver"
+              className="w-full py-3.5 rounded-2xl bg-[#D71920] hover:bg-[#b8141a] text-white font-black text-xs transition flex items-center justify-center gap-2 shadow-lg shadow-[#D71920]/30 cursor-pointer"
+            >
+              <UserCheck className="w-4 h-4" />
+              <span>Book With-Driver (+₹500/day) &rarr;</span>
+            </Link>
           </div>
         </div>
       </section>
@@ -89,14 +184,14 @@ export default function HomePage() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
-            <span className="text-xs font-extrabold uppercase tracking-widest text-red-600">Ready to Drive</span>
+            <span className="text-xs font-extrabold uppercase tracking-widest text-[#D71920]">Ready to Drive</span>
             <h2 className="text-2xl sm:text-3xl font-black text-slate-950">Featured Fleet in Proddatur</h2>
-            <p className="text-slate-500 text-sm mt-1">Book directly with verified car hosts in Korrapadu Road, Gandhi Road & Mydukur Road.</p>
+            <p className="text-slate-500 text-sm mt-1">Book directly with verified car hosts in Korrapadu Road, Gandhi Road &amp; Mydukur Road.</p>
           </div>
 
           <Link 
             href="/cars" 
-            className="inline-flex items-center gap-1.5 text-sm font-bold text-red-600 hover:text-red-700 transition"
+            className="inline-flex items-center gap-1.5 text-sm font-bold text-[#D71920] hover:text-[#b8141a] transition"
           >
             <span>View All Cars ({approvedCars.length})</span>
             <ArrowRight className="w-4 h-4" />

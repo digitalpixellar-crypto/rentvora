@@ -27,6 +27,7 @@ interface MarketplaceContextType {
     endTime: string;
     deliveryRequested: boolean;
     deliveryAddress?: string;
+    rentalType?: 'self_drive' | 'with_driver';
     customerName: string;
     customerEmail: string;
     customerPhone: string;
@@ -235,6 +236,7 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     endTime: string;
     deliveryRequested: boolean;
     deliveryAddress?: string;
+    rentalType?: 'self_drive' | 'with_driver';
     customerName: string;
     customerEmail: string;
     customerPhone: string;
@@ -243,13 +245,18 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     if (!car) throw new Error('Car not found');
 
     const pickupLoc = locations.find(l => l.id === params.pickupLocationId) || locations[0];
+    const isWithDriver = params.rentalType === 'with_driver';
     const quote = calculateServerQuote({
       pricePerDay: car.price_per_day,
+      pricePerHour: car.price_per_hour,
       securityDeposit: car.security_deposit || 3000,
-      deliveryAvailable: true,
+      deliveryAvailable: car.delivery_available ?? true,
       deliveryRequested: params.deliveryRequested,
+      deliveryCharges: car.delivery_charges,
+      withDriver: isWithDriver,
       startTime: params.startTime,
       endTime: params.endTime,
+      customCommissionRate: commissionRate,
     });
 
     const newBooking: Booking = {
@@ -275,10 +282,10 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
       start_time: params.startTime,
       end_time: params.endTime,
       duration_hours: quote.duration_hours,
-      rental_type: 'self_drive',
+      rental_type: params.rentalType || 'self_drive',
       status: 'pending_payment',
       base_rental_amount: quote.base_rental_amount,
-      driver_allowance_amount: 0,
+      driver_allowance_amount: quote.driver_allowance_amount,
       taxes_fees_amount: quote.taxes_fees_amount,
       platform_commission_rate: commissionRate,
       platform_commission_amount: quote.platform_commission_amount,

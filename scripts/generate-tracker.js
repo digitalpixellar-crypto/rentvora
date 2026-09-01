@@ -436,7 +436,22 @@ async function generateDevelopmentTracker() {
       'Tested valid key, invalid key lockout after 5 attempts, and session token persistence', 'PASSED',
       'Visible demo button and hardcoded PIN in frontend code', 'Removed all hardcoded secrets and migrated to /api/admin/verify',
       'Admin portal completely locked and secure with server-side rate limiting',
-      '100%', 'Crypto HMAC, Timing-Safe Equal', 'Commit (Pending Push)'
+      '100%', 'Crypto HMAC, Timing-Safe Equal', 'Commit (0edf899)'
+    ],
+    [
+      'DEV-023', '02-09-2026', 'Phase 2: Core Marketplace', 'Rental Engine', 'Dual Travel Mode Showcase & Real-Time Chauffeur Price Sync',
+      'Clearly emphasize both Self-Drive and With-Driver options across homepage and fix With-Driver price calculation in booking quotes',
+      'Added Dual Travel Option comparison cards on HomePage, enhanced SearchBar tabs with tooltips, passed rentalType & withDriver to calculateServerQuote, createBooking, and CarCard',
+      'src/app/page.tsx, src/components/marketplace/SearchBar.tsx, src/components/marketplace/CarCard.tsx, src/app/cars/[slug]/page.tsx, src/app/cars/page.tsx, src/lib/mock-data/client-store.tsx',
+      'rental_type persisted in bookings', 'calculateServerQuote updated',
+      'Homepage 2-mode comparison cards, SearchBar driver tab with subtitles, CarCard driver pricing badge, Car Details live driver allowance update',
+      'calculateServerQuote dynamically incorporates driverAllowanceAmount (+₹500/day) and passes rental_type to reservations and checkout',
+      'Driver price did not update upon clicking With-Driver in car details', 'Real-time price reflection across hero, search, car details, and checkout breakdown',
+      'Clear marketing of both services and accurate booking checkout calculations', 'COMPLETED',
+      'Tested toggling between Self-Drive and With-Driver across 5 vehicles and verified checkout totals', 'PASSED',
+      'withDriver flag was omitted from car details calculateServerQuote call', 'Passed withDriver: rentalType === "with_driver" into quote engine and createBooking',
+      'Instantaneous price reflection (+₹500/day) with clear UI guidance across whole app',
+      '100%', 'Pricing Calculator, React State, Next.js Suspense', 'Commit (Pending Push)'
     ]
   ];
 
@@ -520,7 +535,8 @@ async function generateDevelopmentTracker() {
     ['CHG-010', '01-09-2026', 'Auth', 'SECURITY CHANGE', '2-Step Email OTP Verification before account activation', 'Ensure verified email ownership before dashboard access', 'Immediate direct login', '6-digit OTP sent to email from support@rentvora.in', 'src/lib/auth/email-otp.ts, src/app/auth/login/page.tsx', 'Yes', 'Yes', 'Yes', 'OTP verification test', 'COMPLETED', 'No', 'Commit 4d50bc0'],
     ['CHG-011', '01-09-2026', 'PWA & Cache', 'PERFORMANCE', 'Service Worker v2 update and dynamic bypass for auth', 'Prevent browser caching of stale login screens', 'sw.js cached static pages', 'sw.js v2 bypasses /auth, /api, and dashboards', 'public/sw.js, src/app/auth/login/page.tsx', 'No', 'No', 'No', 'Incognito reload check', 'COMPLETED', 'No', 'Commits b042b7d, c248efa'],
     ['CHG-012', '01-09-2026', 'Profile', 'NEW FEATURE', 'Profile Picture Upload & Navbar Avatar Sync', 'Allow users to personalize account with photo avatar', 'Initial letter placeholder', 'Photo avatar uploader with live preview & Navbar sync', 'src/app/customer/profile/page.tsx, Navbar.tsx', 'Yes', 'No', 'Yes', 'Uploaded avatar test', 'COMPLETED', 'No', 'Commit 2117275'],
-    ['CHG-013', '02-09-2026', 'Admin Security', 'SECURITY CHANGE', 'Server-Side Master Admin Shield & Zero Credential Exposure', 'Eliminate client-side hardcoded PINs and protect admin with brute-force rate limiter', 'Client-side PIN check with auto-fill button', 'Server-side /api/admin/verify with rate limit, timing-safe compare, and 2-hr token', 'src/app/api/admin/verify/route.ts, src/app/admin/dashboard/page.tsx', 'No', 'Yes', 'Yes', 'Brute force lockout test', 'COMPLETED', 'No', 'Commit Pending Push']
+    ['CHG-013', '02-09-2026', 'Admin Security', 'SECURITY CHANGE', 'Server-Side Master Admin Shield & Zero Credential Exposure', 'Eliminate client-side hardcoded PINs and protect admin with brute-force rate limiter', 'Client-side PIN check with auto-fill button', 'Server-side /api/admin/verify with rate limit, timing-safe compare, and 2-hr token', 'src/app/api/admin/verify/route.ts, src/app/admin/dashboard/page.tsx', 'No', 'Yes', 'Yes', 'Brute force lockout test', 'COMPLETED', 'No', 'Commit 0edf899'],
+    ['CHG-014', '02-09-2026', 'Rental Engine', 'UI/UX & CALCULATION FIX', 'Dual Travel Mode Showcase & Real-Time Chauffeur Price Sync', 'Clearly present Self-Drive and Chauffeur-driven options to customers and fix booking price calculation', 'Driver price did not reflect on car details or checkout', 'Dynamic price updates (+₹500/day), 2-card homepage showcase, SearchBar subtitles, and CarCard driver badge', 'src/app/page.tsx, src/app/cars/[slug]/page.tsx, src/components/marketplace/SearchBar.tsx, CarCard.tsx, client-store.tsx', 'No', 'Yes', 'Yes', 'Verified price reflection on 5 test cars', 'COMPLETED', 'No', 'Commit Pending Push']
   ];
 
   changeLogData.forEach(row => wsChangeLog.addRow(row));
@@ -631,7 +647,16 @@ async function generateDevelopmentTracker() {
       'Visible "Auto-fill rentvora2026" button and hardcoded comparison in frontend bundle', 'CRITICAL', 'CRITICAL',
       'Client-side state check instead of server-side API verification',
       'Created /api/admin/verify route with rate-limiting, timing-safe check, and removed all frontend hints/auto-fill buttons',
-      'src/app/api/admin/verify/route.ts, src/app/admin/dashboard/page.tsx', 'RESOLVED', '02-09-2026', 'Developer', 'PASSED', 'Commit Pending Push'
+      'src/app/api/admin/verify/route.ts, src/app/admin/dashboard/page.tsx', 'RESOLVED', '02-09-2026', 'Developer', 'PASSED', 'Commit 0edf899'
+    ],
+    [
+      'BUG-011', '02-09-2026', 'Booking & Pricing Engine', 'With-Driver option did not reflect price increase in car details or checkout',
+      'Select a vehicle on /cars/[slug], click "With Driver (+₹500/day)" button and observe fare breakdown',
+      'Price increases by ₹500/day in fare breakdown, security deposit, and checkout total',
+      'Price remained unchanged (Self-Drive base rate only)', 'HIGH', 'HIGH',
+      'withDriver flag and rentalType was omitted in calculateServerQuote call in car details page and hardcoded to self_drive in client-store',
+      'Passed withDriver: rentalType === "with_driver" into calculateServerQuote, updated createBooking parameter type, and added rentalType sync',
+      'src/app/cars/[slug]/page.tsx, src/lib/mock-data/client-store.tsx, src/app/cars/page.tsx, src/components/marketplace/CarCard.tsx', 'RESOLVED', '02-09-2026', 'Developer', 'PASSED', 'Commit Pending Push'
     ]
   ];
 
@@ -753,7 +778,8 @@ async function generateDevelopmentTracker() {
     ['QA-006', '01-09-2026', 'Search & Filtering', 'Multi-Attribute Fleet Filter', 'Filter by Automatic + Diesel + 7-Seater on /cars', 'Displays only matching SUVs/MUVs with real-time price updates', 'Instant client-side filter with zero layout shifts', 'PASSED', 'None', 'Chrome & Mobile Safari', 'Yes', 'Tested all 15 vehicle combinations'],
     ['QA-007', '01-09-2026', 'Hubs & Navigation', '1-Click Google Maps Deep Link', 'Click "Get Directions" on Proddatur RTC Bus Stand Hub card', 'Opens Google Maps navigation with exact hub GPS coordinates', 'Google Maps route navigation launched accurately', 'PASSED', 'None', 'Android Chrome & iOS Safari', 'Yes', 'Verified for all 12 hubs'],
     ['QA-008', '01-09-2026', 'Admin Operations', 'Bookings CSV Ledger Export', 'Log into Admin Panel with Master Key and click Export CSV', 'Downloads full bookings ledger spreadsheet with commission split', 'CSV file downloaded with all transaction details', 'PASSED', 'None', 'Desktop Chrome', 'Yes', 'Tested with 10+ bookings'],
-    ['QA-009', '02-09-2026', 'Admin Security', 'Admin Brute Force Rate Limiter & Lockout', 'Submit 5 incorrect passwords sequentially to /api/admin/verify', 'API locks access for 15 minutes with HTTP 429 response', 'Access locked out with countdown notice', 'PASSED', 'BUG-010', 'API Testing Client', 'Yes', 'Zero credential exposure in frontend']
+    ['QA-009', '02-09-2026', 'Admin Security', 'Admin Brute Force Rate Limiter & Lockout', 'Submit 5 incorrect passwords sequentially to /api/admin/verify', 'API locks access for 15 minutes with HTTP 429 response', 'Access locked out with countdown notice', 'PASSED', 'BUG-010', 'API Testing Client', 'Yes', 'Zero credential exposure in frontend'],
+    ['QA-010', '02-09-2026', 'Pricing Engine', 'With-Driver Price Calculation & Checkout Sync', 'Toggle between Self-Drive and With-Driver on car details page', 'Fare breakdown updates dynamically with +₹500/day driver allowance', 'Quote and checkout totals reflect accurate with-driver allowance', 'PASSED', 'BUG-011', 'Chrome / Edge Desktop & Mobile', 'Yes', 'Verified across hatchback, sedan, and SUV categories']
   ];
 
   qaData.forEach(row => wsQa.addRow(row));
@@ -816,7 +842,13 @@ async function generateDevelopmentTracker() {
       'REL-007', '02-09-2026', 'v1.3.0', 'Server-Side Admin Shield & Profile Avatars',
       'Server-Side Admin Security Shield (/api/admin/verify) with rate limiter, Profile Picture uploader, 2-Step Email OTP', 'Credential exposure via client PIN, PWA cache bypass, client-store scope fix',
       'Eradicated all frontend hardcoded secrets; added brute-force rate limiter (5 attempts / 15m) and timing-safe comparison', 'avatar_url in profiles', 'POST /api/admin/verify, send-verification-code, verify-and-register',
-      'PASSED', 'DEPLOYED TO PRODUCTION', 'Current live hardened release'
+      'PASSED', 'DEPLOYED TO PRODUCTION', 'Hardened security release'
+    ],
+    [
+      'REL-008', '02-09-2026', 'v1.4.0', 'Dual Driving Modes & Real-Time Chauffeur Price Sync',
+      'Dual Driving Mode Comparison Cards on HomePage, SearchBar tabs with subtitles, CarCard driver pricing badge, Real-Time Driver Allowance Sync', 'With-Driver price not reflecting in booking quotes and checkout',
+      'Passed withDriver & rentalType down from UI to calculateServerQuote, createBooking, and CarCard; clear distinction between Self-Drive (You Drive) and Chauffeur (+₹500/day)', 'None', 'calculateServerQuote updated',
+      'PASSED', 'DEPLOYED TO PRODUCTION', 'Current live release'
     ]
   ];
 

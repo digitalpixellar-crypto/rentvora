@@ -1,7 +1,9 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+export const dynamic = 'force-dynamic';
+
+import React, { useState, useMemo, Suspense } from 'react';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { 
   Car as CarIcon, 
@@ -19,16 +21,18 @@ import {
   ChevronRight, 
   Info,
   Building,
-  Lock
+  Lock,
+  UserCheck
 } from 'lucide-react';
 import { useMarketplace } from '@/lib/mock-data/client-store';
 import { formatCurrency, formatDateTime } from '@/lib/utils/formatters';
 import { calculateServerQuote } from '@/lib/pricing/calculator';
 import PriceBreakdown from '@/components/marketplace/PriceBreakdown';
 
-export default function CarDetailsPage() {
+function CarDetailsContent() {
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
   const slug = params.slug as string;
 
   const { cars, locations, reviews, getCarBySlug, checkAvailability, createBooking, commissionRate } = useMarketplace();
@@ -46,12 +50,18 @@ export default function CarDetailsPage() {
   returnDate.setDate(returnDate.getDate() + 3);
   const returnDateStr = returnDate.toISOString().split('T')[0];
 
-  const [pickupDate, setPickupDate] = useState(startDateStr);
-  const [pickupTime, setPickupTime] = useState('10:00');
-  const [dropoffDate, setDropoffDate] = useState(returnDateStr);
-  const [dropoffTime, setDropoffTime] = useState('10:00');
+  const initialRentalType = searchParams?.get('rentalType') === 'with_driver' ? 'with_driver' : 'self_drive';
+  const initialPickupDate = searchParams?.get('pickupDate') || startDateStr;
+  const initialPickupTime = searchParams?.get('pickupTime') || '10:00';
+  const initialDropoffDate = searchParams?.get('dropoffDate') || returnDateStr;
+  const initialDropoffTime = searchParams?.get('dropoffTime') || '10:00';
+
+  const [pickupDate, setPickupDate] = useState(initialPickupDate);
+  const [pickupTime, setPickupTime] = useState(initialPickupTime);
+  const [dropoffDate, setDropoffDate] = useState(initialDropoffDate);
+  const [dropoffTime, setDropoffTime] = useState(initialDropoffTime);
   const [deliveryRequested, setDeliveryRequested] = useState(false);
-  const [rentalType, setRentalType] = useState<'self_drive' | 'with_driver'>('self_drive');
+  const [rentalType, setRentalType] = useState<'self_drive' | 'with_driver'>(initialRentalType);
   const [deliveryAddress, setDeliveryAddress] = useState('');
   const [selectedPickupLocationId, setSelectedPickupLocationId] = useState(car?.location_id || locations[0]?.id || '');
 
@@ -78,6 +88,7 @@ export default function CarDetailsPage() {
         deliveryAvailable: car.delivery_available,
         deliveryCharges: car.delivery_charges,
         deliveryRequested: deliveryRequested,
+        withDriver: rentalType === 'with_driver',
         startTime: startIsoString,
         endTime: endIsoString,
         customCommissionRate: commissionRate,
@@ -131,6 +142,7 @@ export default function CarDetailsPage() {
         endTime: endIsoString,
         deliveryRequested,
         deliveryAddress: deliveryRequested ? deliveryAddress : undefined,
+        rentalType: rentalType,
         customerName,
         customerEmail,
         customerPhone,
@@ -400,8 +412,23 @@ export default function CarDetailsPage() {
             {/* Widget Price Header */}
             <div className="flex items-baseline justify-between pb-4 border-b border-slate-100">
               <div>
-                <span className="text-2xl font-black text-slate-900">{formatCurrency(car.price_per_day)}</span>
-                <span className="text-xs font-semibold text-slate-500"> / day</span>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-2xl font-black text-slate-900">
+                    {rentalType === 'with_driver' 
+                      ? formatCurrency(car.price_per_day + 500) 
+                      : formatCurrency(car.price_per_day)}
+                  </span>
+                  <span className="text-xs font-semibold text-slate-500"> / day</span>
+                </div>
+                {rentalType === 'with_driver' ? (
+                  <span className="text-[10px] font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded-full inline-block mt-0.5 border border-red-200">
+                    🚗 {formatCurrency(car.price_per_day)} car + ₹500 driver
+                  </span>
+                ) : (
+                  <span className="text-[10px] font-bold text-slate-500 block mt-0.5">
+                    🚗 Self-Drive (You Drive)
+                  </span>
+                )}
               </div>
               <div className="text-right">
                 <span className="text-xs font-bold text-[#D71920] block">Security Deposit: {formatCurrency(car.security_deposit)}</span>
@@ -411,8 +438,8 @@ export default function CarDetailsPage() {
 
             {/* Availability Indicator */}
             {isCarAvailable ? (
-              <div className="bg-red-50 text-red-900 border border-red-200 rounded-xl p-3 text-xs font-semibold flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-[#D71920] shrink-0" />
+              <div className="bg-emerald-50 text-emerald-900 border border-emerald-200 rounded-xl p-3 text-xs font-semibold flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
                 <span>Available for your selected rental period in Proddatur!</span>
               </div>
             ) : (
@@ -424,34 +451,70 @@ export default function CarDetailsPage() {
 
             <form onSubmit={handleProceedToBooking} className="space-y-4">
               {/* Rental Mode: Self-Drive vs With Chauffeur */}
-              <div className="space-y-1.5">
-                <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                  Rental Type / Mode
-                </label>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                    Select Rental Mode
+                  </label>
+                  <span className="text-[10px] font-extrabold text-[#D71920] uppercase tracking-wider">
+                    {rentalType === 'with_driver' ? 'Chauffeur Included' : 'Self-Drive Mode'}
+                  </span>
+                </div>
+
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
                     onClick={() => setRentalType('self_drive')}
-                    className={`p-3 rounded-2xl border text-left transition flex flex-col justify-between ${rentalType === 'self_drive' ? 'bg-[#111111] text-white border-[#111111] shadow-md' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'}`}
+                    className={`p-3 rounded-2xl border text-left transition flex flex-col justify-between cursor-pointer ${
+                      rentalType === 'self_drive' 
+                        ? 'bg-[#111111] text-white border-[#111111] shadow-md ring-2 ring-slate-900' 
+                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                    }`}
                   >
                     <div className="flex items-center justify-between w-full">
                       <span className="font-extrabold text-xs">🚗 Self-Drive</span>
                       {rentalType === 'self_drive' && <span className="w-2 h-2 rounded-full bg-[#D71920]" />}
                     </div>
-                    <span className="text-[10px] opacity-70 mt-0.5">Drive yourself (DL req.)</span>
+                    <span className="text-[10px] opacity-80 mt-1">You drive (100% Privacy)</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => setRentalType('with_driver')}
-                    className={`p-3 rounded-2xl border text-left transition flex flex-col justify-between ${rentalType === 'with_driver' ? 'bg-[#D71920] text-white border-[#D71920] shadow-md shadow-[#D71920]/25' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'}`}
+                    className={`p-3 rounded-2xl border text-left transition flex flex-col justify-between cursor-pointer ${
+                      rentalType === 'with_driver' 
+                        ? 'bg-[#D71920] text-white border-[#D71920] shadow-md shadow-[#D71920]/30 ring-2 ring-red-400' 
+                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                    }`}
                   >
                     <div className="flex items-center justify-between w-full">
-                      <span className="font-extrabold text-xs">👔 With Driver</span>
+                      <span className="font-extrabold text-xs flex items-center gap-1">
+                        <UserCheck className="w-3.5 h-3.5" />
+                        <span>With Driver</span>
+                      </span>
                       {rentalType === 'with_driver' && <span className="w-2 h-2 rounded-full bg-white" />}
                     </div>
-                    <span className="text-[10px] opacity-90 mt-0.5">+₹500/day (Relaxed trip)</span>
+                    <span className="text-[10px] opacity-95 mt-1 font-semibold">+₹500/day (Verified Driver)</span>
                   </button>
+                </div>
+
+                {/* Explanatory Info Card */}
+                <div className={`p-2.5 rounded-xl border text-[11px] font-semibold flex items-center gap-2 ${
+                  rentalType === 'with_driver' 
+                    ? 'bg-red-50/80 border-red-200 text-red-950' 
+                    : 'bg-slate-50 border-slate-200 text-slate-700'
+                }`}>
+                  {rentalType === 'with_driver' ? (
+                    <>
+                      <UserCheck className="w-4 h-4 text-[#D71920] shrink-0" />
+                      <span><strong>Professional Driver Included:</strong> Driver arrives with vehicle at your selected time. Zero driving fatigue for outstation trips.</span>
+                    </>
+                  ) : (
+                    <>
+                      <CarIcon className="w-4 h-4 text-[#D71920] shrink-0" />
+                      <span><strong>Self-Drive Mode:</strong> You drive the car. Original Indian Driving License required during vehicle handover.</span>
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -618,5 +681,18 @@ export default function CarDetailsPage() {
       </div>
 
     </div>
+  );
+}
+
+export default function CarDetailsPage() {
+  return (
+    <Suspense fallback={
+      <div className="max-w-7xl mx-auto px-4 py-20 text-center font-montserrat space-y-4">
+        <div className="w-10 h-10 border-4 border-[#D71920] border-t-transparent rounded-full animate-spin mx-auto" />
+        <p className="text-xs font-bold text-slate-500">Loading vehicle specifications &amp; pricing...</p>
+      </div>
+    }>
+      <CarDetailsContent />
+    </Suspense>
   );
 }

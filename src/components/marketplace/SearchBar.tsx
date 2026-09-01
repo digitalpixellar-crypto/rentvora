@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -44,32 +44,38 @@ export default function SearchBar({ compact = false }: { compact?: boolean }) {
       className={`bg-white rounded-3xl shadow-2xl border border-slate-200/90 p-4 sm:p-5 ${compact ? 'max-w-4xl' : 'max-w-5xl'} mx-auto font-montserrat space-y-4`}
     >
       {/* Top Rental Type Tabs */}
-      <div className="flex items-center gap-2 pb-1 border-b border-slate-100">
+      <div className="flex flex-wrap items-center gap-2 pb-2 border-b border-slate-100">
         <button
           type="button"
           onClick={() => setRentalType('self_drive')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition ${
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-black transition cursor-pointer ${
             rentalType === 'self_drive'
-              ? 'bg-[#111111] text-white shadow-sm'
-              : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
+              ? 'bg-[#111111] text-white shadow-md ring-2 ring-slate-900'
+              : 'bg-slate-100/80 text-slate-700 hover:bg-slate-200/70'
           }`}
         >
-          <span>🚗 Self-Drive</span>
-          {rentalType === 'self_drive' && <span className="w-1.5 h-1.5 rounded-full bg-[#D71920]" />}
+          <span>🚗 Self-Drive (You Drive)</span>
+          {rentalType === 'self_drive' && <span className="w-2 h-2 rounded-full bg-[#D71920]" />}
         </button>
 
         <button
           type="button"
           onClick={() => setRentalType('with_driver')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition ${
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-black transition cursor-pointer ${
             rentalType === 'with_driver'
-              ? 'bg-[#D71920] text-white shadow-sm shadow-[#D71920]/25'
-              : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
+              ? 'bg-[#D71920] text-white shadow-md shadow-[#D71920]/30 ring-2 ring-red-400'
+              : 'bg-slate-100/80 text-slate-700 hover:bg-slate-200/70'
           }`}
         >
-          <UserCheck className="w-3.5 h-3.5" />
-          <span>With Driver (+₹500/day)</span>
+          <UserCheck className="w-4 h-4" />
+          <span>👨‍✈️ With Driver (Chauffeur +₹500/day)</span>
         </button>
+
+        <span className="hidden sm:inline-block text-[11px] font-semibold text-slate-500 ml-auto">
+          {rentalType === 'with_driver' 
+            ? '✨ Chauffeur arrives with vehicle • Zero fatigue outstation' 
+            : '✨ 100% Privacy • Valid Driving License required'}
+        </span>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
