@@ -172,7 +172,7 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     if (role === 'admin') {
       userObj = {
         id: customUser?.id || 'usr-admin-1',
-        email: customUser?.email || 'admin@rentvora.com',
+        email: customUser?.email || 'admin@rentvora.in',
         full_name: customUser?.full_name || 'Platform Administrator',
         phone: customUser?.phone || '+91 78938 17322',
         role: 'admin',
@@ -189,7 +189,7 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     } else {
       userObj = {
         id: customUser?.id || 'usr-cust-' + Date.now(),
-        email: customUser?.email || 'customer@rentvora.com',
+        email: customUser?.email || 'customer@rentvora.in',
         full_name: customUser?.full_name || 'Valued Driver',
         phone: customUser?.phone || '+91 78938 17322',
         role: 'customer',

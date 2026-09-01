@@ -4,8 +4,8 @@ export const APP_CONFIG = {
   defaultCity: "Proddatur",
   defaultState: "Andhra Pradesh",
   supportPhone: "+91 78938 17322",
-  supportEmail: "support@rentvora.com",
-  adminEmail: "admin@rentvora.com",
+  supportEmail: "support@rentvora.in",
+  adminEmail: "admin@rentvora.in",
   defaultCommissionRate: 10.0, // 10%
   defaultTaxRate: 5.0, // 5% GST
   minRentalHours: 12,

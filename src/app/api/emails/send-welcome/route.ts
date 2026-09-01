@@ -12,7 +12,7 @@ export async function POST(request: Request) {
     const resendApiKey = process.env.RESEND_API_KEY;
     const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
     const name = fullName || 'Driver';
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://rentvora.vercel.app';
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://rentvora.in';
 
     // NOTE: When using onboarding@resend.dev (Resend sandbox/free tier),
     // emails can ONLY be sent to your own verified Resend account email.
@@ -66,7 +66,7 @@ export async function POST(request: Request) {
           '</div>' +
           '<div class="footer">' +
             'RENTVORA Self-Drive Car Rentals &bull; Proddatur, Kadapa &amp; Andhra Pradesh<br>' +
-            'Official Support: +91 78938 17322 &bull; support@rentvora.com' +
+            'Official Support: +91 78938 17322 &bull; support@rentvora.in' +
           '</div>' +
         '</div>' +
       '</body>' +

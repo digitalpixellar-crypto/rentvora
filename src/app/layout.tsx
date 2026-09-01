@@ -22,10 +22,14 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://rentvora.in'),
   title: 'RENTVORA | Self Drive Car Rentals in Proddatur & Andhra Pradesh',
   description: 'Rent verified self-drive cars in Proddatur, Andhra Pradesh. Best prices on Maruti Swift, Hyundai Creta, Innova Crysta, Thar & Nexon. Verified owners, zero hidden fees, instant booking.',
   keywords: 'rentvora, car rental proddatur, self drive car rental proddatur, rent a car in proddatur, cars for rent proddatur, self drive cars kadapa, andhra pradesh car rental',
   manifest: '/manifest.json',
+  alternates: {
+    canonical: 'https://rentvora.in',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
@@ -38,6 +42,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'RENTVORA — Premier Self-Drive Car Rental Marketplace',
     description: 'Book verified self-drive cars in Proddatur & Kadapa. Transparent pricing & refundable security deposit.',
+    url: 'https://rentvora.in',
     type: 'website',
     locale: 'en_IN',
     siteName: 'RENTVORA',

@@ -56,7 +56,7 @@ Please keep the vehicle sanitized with full fuel for handover.`;
 Namaste ${payload.recipientName}! 
 Your security deposit of *₹${payload.refundAmount || 2000}* for booking *${payload.bookingRef}* has been 100% refunded to your UPI/bank account.
 
-Thank you for choosing RENTVORA for your Andhra Pradesh road trip! ⭐ Rate your trip at rentvora.vercel.app`;
+Thank you for choosing RENTVORA for your Andhra Pradesh road trip! ⭐ Rate your trip at rentvora.in`;
   }
 
   return `Hello ${payload.recipientName}, updates regarding your RENTVORA booking ${payload.bookingRef}.`;

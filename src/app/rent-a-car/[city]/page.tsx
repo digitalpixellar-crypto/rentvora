@@ -181,7 +181,7 @@ export default function CityLandingPage() {
     'name': `RENTVORA Self-Drive Car Rental ${cityName}`,
     'description': cityData.description,
     'telephone': '+917893817322',
-    'email': 'support@rentvora.com',
+    'email': 'support@rentvora.in',
     'address': {
       '@type': 'PostalAddress',
       'addressLocality': cityName,
@@ -190,7 +190,7 @@ export default function CityLandingPage() {
     },
     'priceRange': '₹2,000 - ₹5,000',
     'openingHours': 'Mo-Su 00:00-23:59',
-    'url': `https://rentvora.vercel.app/rent-a-car/${rawCity}`
+    'url': `https://rentvora.in/rent-a-car/${rawCity}`
   };
 
   return (
