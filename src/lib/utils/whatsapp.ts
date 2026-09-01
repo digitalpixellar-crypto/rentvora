@@ -1,4 +1,4 @@
-﻿import { Booking } from '@/types';
+import { Booking } from '@/types';
 import { APP_CONFIG } from '@/lib/constants';
 import { formatDateTime } from './formatters';
 
@@ -29,3 +29,8 @@ export function generateHostBookingWhatsAppMessage(booking: Booking): string {
 export function generateCustomerSupportWhatsAppMessage(topic: string = 'General Inquiry'): string {
   return `Hello RENTVORA Support! 👋\n\nI need assistance with: *${topic}* in Proddatur.\n\nPlease guide me with available self-drive cars, pickup points, and pricing.`;
 }
+
+export function getWhatsAppSupportUrl(message: string = 'Hello RENTVORA Support, I need assistance with car rentals.'): string {
+  return createWhatsAppUrl(APP_CONFIG.supportPhone || '7893817322', message);
+}
+

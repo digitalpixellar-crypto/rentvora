@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState } from 'react';
 import Link from 'next/link';
@@ -67,10 +67,16 @@ export default function Navbar() {
               Explore Fleet
             </Link>
             <Link 
+              href="/hubs" 
+              className={`transition-colors hover:text-[#D71920] ${pathname.startsWith('/hubs') ? 'text-[#D71920] font-bold' : ''}`}
+            >
+              📍 Pickup Hubs
+            </Link>
+            <Link 
               href="/rent-a-car/proddatur" 
               className="transition-colors hover:text-[#D71920]"
             >
-              Proddatur Hubs
+              Proddatur
             </Link>
             <Link 
               href="/#how-it-works" 
@@ -232,7 +238,10 @@ export default function Navbar() {
             <Link href="/cars" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2.5 rounded-lg hover:bg-slate-100 flex items-center justify-between">
               <span>🚗 Explore Fleet</span>
             </Link>
-            <Link href="/customer/dashboard" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2.5 rounded-lg hover:bg-slate-100 text-[#D71920] flex items-center justify-between">
+            <Link href="/hubs" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2.5 rounded-lg hover:bg-slate-100 text-[#D71920] flex items-center justify-between">
+              <span>📍 Pickup Hubs & Map</span>
+            </Link>
+            <Link href="/customer/dashboard" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2.5 rounded-lg hover:bg-slate-100 flex items-center justify-between">
               <span>📋 My Bookings</span>
             </Link>
             <Link href="/customer/profile" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2.5 rounded-lg hover:bg-slate-100 flex items-center justify-between">
