@@ -13,7 +13,8 @@ import {
   X, 
   CheckCircle,
   MapPin,
-  MessageCircle
+  MessageCircle,
+  Lock
 } from 'lucide-react';
 import { useMarketplace } from '@/lib/mock-data/client-store';
 import { formatCurrency, formatDateTime } from '@/lib/utils/formatters';
@@ -21,7 +22,7 @@ import { createWhatsAppUrl, generateHostBookingWhatsAppMessage } from '@/lib/uti
 import { Booking } from '@/types';
 
 export default function CustomerDashboardPage() {
-  const { bookings, currentUser, cancelBooking, addReview } = useMarketplace();
+  const { bookings, currentUser, isAuthLoaded, logout, cancelBooking, addReview } = useMarketplace();
   const [activeTab, setActiveTab] = useState<'upcoming' | 'completed' | 'cancelled'>('upcoming');
 
   const [cancelModalBooking, setCancelModalBooking] = useState<Booking | null>(null);
@@ -66,6 +67,37 @@ export default function CustomerDashboardPage() {
       setSubmittingReview(false);
     }
   };
+
+  
+  if (isAuthLoaded && !currentUser) {
+    return (
+      <div className="max-w-xl mx-auto px-4 py-20 text-center space-y-6 font-montserrat">
+        <div className="w-16 h-16 rounded-3xl bg-red-50 text-[#D71920] border border-red-200 flex items-center justify-center mx-auto shadow-md">
+          <Lock className="w-8 h-8" />
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-2xl font-black text-slate-900">Sign In to View Your Bookings</h2>
+          <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
+            Please log in with your mobile number or email to access your active reservations, digital receipts, and Driving License verification.
+          </p>
+        </div>
+        <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+          <Link
+            href="/auth/login?redirect=/customer/dashboard"
+            className="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-[#D71920] hover:bg-[#b8141a] text-white font-extrabold text-xs shadow-lg shadow-[#D71920]/25 transition"
+          >
+            Sign In with Phone / Email →
+          </Link>
+          <Link
+            href="/cars"
+            className="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition"
+          >
+            Browse Fleet First
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">

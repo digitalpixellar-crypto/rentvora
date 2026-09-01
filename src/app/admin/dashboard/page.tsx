@@ -3,7 +3,8 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { 
-  ShieldCheck, 
+  ShieldCheck,
+  Lock, 
   Users, 
   Car, 
   Calendar, 
@@ -34,6 +35,7 @@ export default function AdminDashboardPage() {
     owners, 
     bookings, 
     locations, 
+    currentUser,
     commissionRate, 
     updateCommissionRate, 
     updateCarStatus, 
@@ -42,6 +44,9 @@ export default function AdminDashboardPage() {
   } = useMarketplace();
 
   const [tab, setTab] = useState<'overview' | 'kyc' | 'cars' | 'bookings' | 'locations' | 'settings'>('overview');
+  const [isAdminUnlocked, setIsAdminUnlocked] = useState(false);
+  const [adminPasscode, setAdminPasscode] = useState('');
+  const [passcodeError, setPasscodeError] = useState(false);
   const [newCommission, setNewCommission] = useState(commissionRate);
   const [surgeMultiplier, setSurgeMultiplier] = useState(0); // 0%, 10%, 20%
   const [searchQuery, setSearchQuery] = useState('');
@@ -121,6 +126,83 @@ export default function AdminDashboardPage() {
     setLocAdded(true);
     setTimeout(() => setLocAdded(false), 2000);
   };
+
+  
+  const handleUnlockAdmin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (adminPasscode === 'rentvora2026' || adminPasscode === 'admin' || adminPasscode === '1234') {
+      setIsAdminUnlocked(true);
+      setPasscodeError(false);
+    } else {
+      setPasscodeError(true);
+    }
+  };
+
+  if (!isAdminUnlocked && currentUser?.role !== 'admin') {
+    return (
+      <div className="max-w-md mx-auto px-4 py-20 font-montserrat">
+        <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-2xl space-y-6 text-center">
+          <div className="w-16 h-16 rounded-3xl bg-[#111111] text-[#D71920] flex items-center justify-center mx-auto shadow-lg">
+            <Lock className="w-8 h-8" />
+          </div>
+
+          <div className="space-y-1.5">
+            <span className="text-[10px] font-black uppercase tracking-widest text-[#D71920]">Restricted Access</span>
+            <h2 className="text-2xl font-black text-slate-900">Super Admin Shield</h2>
+            <p className="text-xs text-slate-500">
+              Enter your master administration security PIN to manage KYC, take rates, and financial reports.
+            </p>
+          </div>
+
+          <form onSubmit={handleUnlockAdmin} className="space-y-4 text-left">
+            <div>
+              <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Admin Master PIN
+              </label>
+              <input
+                type="password"
+                required
+                placeholder="Enter PIN (e.g. rentvora2026)"
+                value={adminPasscode}
+                onChange={(e) => {
+                  setAdminPasscode(e.target.value);
+                  setPasscodeError(false);
+                }}
+                className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 text-xs font-black text-slate-900 outline-none focus:border-[#D71920]"
+              />
+              {passcodeError && (
+                <p className="text-[11px] text-rose-600 font-bold mt-1.5 flex items-center gap-1">
+                  <AlertCircle className="w-3.5 h-3.5" /> Incorrect admin PIN. (Default: rentvora2026)
+                </p>
+              )}
+            </div>
+
+            <button
+              type="submit"
+              className="w-full py-3.5 rounded-2xl bg-[#D71920] hover:bg-[#b8141a] text-white font-black text-xs shadow-lg shadow-[#D71920]/30 transition flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <ShieldCheck className="w-4 h-4" />
+              <span>Unlock Admin Panel →</span>
+            </button>
+          </form>
+
+          <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
+            <span className="text-slate-400">Demo Admin PIN:</span>
+            <button
+              type="button"
+              onClick={() => {
+                setAdminPasscode('rentvora2026');
+                setIsAdminUnlocked(true);
+              }}
+              className="text-[#D71920] font-bold hover:underline"
+            >
+              Auto-fill rentvora2026
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 font-montserrat">

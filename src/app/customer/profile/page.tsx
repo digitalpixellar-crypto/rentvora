@@ -20,7 +20,7 @@ import {
 import { useMarketplace } from '@/lib/mock-data/client-store';
 
 export default function CustomerProfilePage() {
-  const { currentUser } = useMarketplace();
+  const { currentUser, isAuthLoaded } = useMarketplace();
 
   const [fullName, setFullName] = useState(currentUser?.full_name || 'Pavan Kalyan M');
   const [phone, setPhone] = useState(currentUser?.phone || '+91 91234 56780');
@@ -50,6 +50,31 @@ export default function CustomerProfilePage() {
       setTimeout(() => setSavedSuccess(false), 3000);
     }, 800);
   };
+
+  
+  if (isAuthLoaded && !currentUser) {
+    return (
+      <div className="max-w-xl mx-auto px-4 py-20 text-center space-y-6 font-montserrat">
+        <div className="w-16 h-16 rounded-3xl bg-red-50 text-[#D71920] border border-red-200 flex items-center justify-center mx-auto shadow-md">
+          <Lock className="w-8 h-8" />
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-2xl font-black text-slate-900">Sign In to Manage KYC Profile</h2>
+          <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
+            Please log in to upload and manage your Driving License and Aadhaar document verification.
+          </p>
+        </div>
+        <div className="pt-2 flex justify-center">
+          <Link
+            href="/auth/login?redirect=/customer/profile"
+            className="px-6 py-3.5 rounded-2xl bg-[#D71920] hover:bg-[#b8141a] text-white font-extrabold text-xs shadow-lg shadow-[#D71920]/25 transition"
+          >
+            Sign In with Phone / Email →
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 font-montserrat">

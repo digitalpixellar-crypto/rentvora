@@ -22,7 +22,7 @@ import Logo from './Logo';
 
 export default function Navbar() {
   const pathname = usePathname();
-  const { currentUser, setCurrentUserRole, locations } = useMarketplace();
+  const { currentUser, logout, setCurrentUserRole, locations } = useMarketplace();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [selectedCity, setSelectedCity] = useState('Proddatur');
@@ -167,14 +167,16 @@ export default function Navbar() {
                   </div>
 
                   <div className="pt-1 border-t border-slate-100 px-1">
-                    <Link
-                      href="/auth/login"
-                      onClick={() => setUserDropdownOpen(false)}
-                      className="w-full px-3 py-2 text-xs text-slate-600 hover:bg-slate-100 rounded-xl flex items-center gap-2 font-semibold"
+                    <button
+                      onClick={() => {
+                        logout();
+                        setUserDropdownOpen(false);
+                      }}
+                      className="w-full px-3 py-2 text-xs text-rose-600 hover:bg-rose-50 rounded-xl flex items-center gap-2 font-bold cursor-pointer transition"
                     >
-                      <LogOut className="w-3.5 h-3.5 text-slate-400" />
-                      <span>Switch Account / Sign In</span>
-                    </Link>
+                      <LogOut className="w-3.5 h-3.5 text-rose-500" />
+                      <span>Sign Out / Log Out</span>
+                    </button>
                   </div>
                 </div>
               )}

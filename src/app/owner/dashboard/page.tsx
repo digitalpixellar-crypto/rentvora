@@ -8,7 +8,8 @@ import {
   TrendingUp, 
   Wallet, 
   PlusCircle, 
-  ShieldCheck, 
+  ShieldCheck,
+  Lock, 
   Calendar as CalendarIcon, 
   CheckCircle2, 
   Ban, 
@@ -24,7 +25,7 @@ import { useMarketplace } from '@/lib/mock-data/client-store';
 import { formatCurrency, formatDateTime } from '@/lib/utils/formatters';
 
 export default function OwnerDashboardPage() {
-  const { cars, bookings, currentUser, updateCarStatus, commissionRate } = useMarketplace();
+  const { cars, bookings, currentUser, isAuthLoaded, setCurrentUserRole, updateCarStatus, commissionRate } = useMarketplace();
   const ownerCars = cars.filter(c => c.owner_id === currentUser?.id || c.owner_id === 'usr-owner-1');
   const ownerBookings = bookings.filter(b => b.owner_id === currentUser?.id || b.owner_id === 'usr-owner-1');
 
@@ -108,6 +109,37 @@ export default function OwnerDashboardPage() {
     if (!selectedCarId) return;
     setBlockedDatesMap(prev => ({ ...prev, [selectedCarId]: [] }));
   };
+
+  
+  if (isAuthLoaded && (!currentUser || (currentUser.role !== 'owner' && currentUser.role !== 'admin'))) {
+    return (
+      <div className="max-w-xl mx-auto px-4 py-20 text-center space-y-6 font-montserrat">
+        <div className="w-16 h-16 rounded-3xl bg-red-50 text-[#D71920] border border-red-200 flex items-center justify-center mx-auto shadow-md">
+          <Building2 className="w-8 h-8" />
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-2xl font-black text-slate-900">Car Host Partner Access Required</h2>
+          <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
+            This portal is reserved for verified RENTVORA vehicle hosts in Proddatur and Kadapa to manage availability, bookings, and bank payouts.
+          </p>
+        </div>
+        <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+          <Link
+            href="/auth/login?role=owner&redirect=/owner/dashboard"
+            className="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-[#D71920] hover:bg-[#b8141a] text-white font-extrabold text-xs shadow-lg shadow-[#D71920]/25 transition"
+          >
+            Sign In as Car Host →
+          </Link>
+          <Link
+            href="/owner/register"
+            className="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs transition"
+          >
+            + Register New Vehicle (Earn ₹40k+/mo)
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 font-montserrat">

@@ -13,7 +13,9 @@ interface MarketplaceContextType {
   reviews: Review[];
   currentUser: Profile | null;
   commissionRate: number;
-  setCurrentUserRole: (role: UserRole) => void;
+  setCurrentUserRole: (role: UserRole, customUser?: Partial<Profile>) => void;
+  logout: () => void;
+  isAuthLoaded: boolean;
   getCarBySlug: (slug: string) => Car | undefined;
   getCarById: (id: string) => Car | undefined;
   checkAvailability: (carId: string, startTime: string, endTime: string, excludeBookingId?: string) => boolean;
@@ -48,16 +50,8 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
   const [reviews, setReviews] = useState<Review[]>(INITIAL_REVIEWS);
   const [commissionRate, setCommissionRate] = useState<number>(10);
   
-  const [currentUser, setCurrentUser] = useState<Profile | null>({
-    id: "usr-cust-1",
-    email: "pavan.kalyan@gmail.com",
-    full_name: "Pavan Kalyan M",
-    phone: "+91 91234 56780",
-    role: "customer",
-    status: "active",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  });
+  const [currentUser, setCurrentUser] = useState<Profile | null>(null);
+  const [isAuthLoaded, setIsAuthLoaded] = useState<boolean>(false);
 
   // Load state from localStorage on mount if available
   useEffect(() => {
@@ -76,8 +70,15 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
 
       const savedRate = localStorage.getItem('rentvora_commission');
       if (savedRate) setCommissionRate(Number(savedRate));
+
+      const savedUser = localStorage.getItem('rentvora_user');
+      if (savedUser) {
+        setCurrentUser(JSON.parse(savedUser));
+      }
     } catch (e) {
       console.error('Failed to load local marketplace state', e);
+    } finally {
+      setIsAuthLoaded(true);
     }
   }, []);
 
@@ -100,32 +101,48 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     }
   };
 
-  const setCurrentUserRole = (role: UserRole) => {
+  const logout = () => {
+    setCurrentUser(null);
+    try {
+      localStorage.removeItem('rentvora_user');
+    } catch {}
+  };
+
+  const setCurrentUserRole = (role: UserRole, customUser?: Partial<Profile>) => {
+    let userObj: Profile;
     if (role === 'admin') {
-      setCurrentUser({
+      userObj = {
         id: 'usr-admin-1',
-        email: 'admin@rentvora.com',
-        full_name: 'Platform Administrator',
-        phone: '+91 98765 43210',
+        email: customUser?.email || 'admin@rentvora.com',
+        full_name: customUser?.full_name || 'Platform Administrator',
+        phone: customUser?.phone || '+91 78938 17322',
         role: 'admin',
         status: 'active',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-      });
+      };
     } else if (role === 'owner') {
-      setCurrentUser(owners[0]);
+      userObj = {
+        ...owners[0],
+        ...(customUser || {}),
+        role: 'owner',
+      };
     } else {
-      setCurrentUser({
-        id: 'usr-cust-1',
-        email: 'pavan.kalyan@gmail.com',
-        full_name: 'Pavan Kalyan M',
-        phone: '+91 91234 56780',
+      userObj = {
+        id: customUser?.id || 'usr-cust-' + Date.now(),
+        email: customUser?.email || 'customer@rentvora.com',
+        full_name: customUser?.full_name || 'Pavan Kalyan',
+        phone: customUser?.phone || '+91 78938 17322',
         role: 'customer',
         status: 'active',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-      });
+      };
     }
+    setCurrentUser(userObj);
+    try {
+      localStorage.setItem('rentvora_user', JSON.stringify(userObj));
+    } catch {}
   };
 
   const getCarBySlug = (slug: string) => cars.find(c => c.slug === slug);
@@ -397,6 +414,8 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
         owners,
         reviews,
         currentUser,
+        isAuthLoaded,
+        logout,
         commissionRate,
         setCurrentUserRole,
         getCarBySlug,
