@@ -97,13 +97,30 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     loadLocalData();
 
     // 2. Get the initial Supabase session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session?.user) {
         const profile = buildProfileFromSupabaseUser(session.user);
         setCurrentUser(profile);
         try {
           localStorage.setItem('rentvora_user', JSON.stringify(profile));
         } catch {}
+        // Load user's real bookings from Supabase
+        try {
+          const { data: sbBookings } = await supabase
+            .from('bookings')
+            .select('*, car:cars(*), pickup_location:locations(*)')
+            .eq('customer_id', session.user.id)
+            .order('created_at', { ascending: false });
+          if (sbBookings && sbBookings.length > 0) {
+            setBookings(prev => {
+              const existingIds = new Set(prev.map(b => b.id));
+              const newOnes = sbBookings.filter((b: any) => !existingIds.has(b.id));
+              return [...prev, ...newOnes];
+            });
+          }
+        } catch (e) {
+          console.warn('Supabase bookings fetch (non-blocking):', e);
+        }
       } else {
         // Fall back to stored user from localStorage
         try {
@@ -301,6 +318,40 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
 
     const updatedBookings = [...bookings, newBooking];
     saveState(undefined, updatedBookings);
+
+    // Also persist to Supabase if user is logged in with real ID
+    try {
+      if (newBooking.customer_id && !newBooking.customer_id.startsWith('guest') && !newBooking.customer_id.startsWith('usr-')) {
+        const supabase = createClient();
+        await supabase.from('bookings').insert({
+          id: newBooking.id,
+          booking_reference: newBooking.booking_reference,
+          car_id: newBooking.car_id,
+          customer_id: newBooking.customer_id,
+          owner_id: newBooking.owner_id,
+          pickup_location_id: newBooking.pickup_location_id,
+          start_time: newBooking.start_time,
+          end_time: newBooking.end_time,
+          duration_hours: newBooking.duration_hours,
+          rental_type: newBooking.rental_type,
+          status: newBooking.status,
+          base_rental_amount: newBooking.base_rental_amount,
+          driver_allowance_amount: newBooking.driver_allowance_amount,
+          taxes_fees_amount: newBooking.taxes_fees_amount,
+          platform_commission_rate: newBooking.platform_commission_rate,
+          platform_commission_amount: newBooking.platform_commission_amount,
+          owner_earnings_amount: newBooking.owner_earnings_amount,
+          security_deposit_amount: newBooking.security_deposit_amount,
+          delivery_amount: newBooking.delivery_amount,
+          total_amount: newBooking.total_amount,
+          delivery_requested: newBooking.delivery_requested,
+          delivery_address: newBooking.delivery_address,
+        }).single();
+      }
+    } catch (e) {
+      console.warn('Supabase booking sync notice (non-blocking):', e);
+    }
+
     return { booking: newBooking, quote };
   };
 
@@ -312,6 +363,20 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
       return b;
     });
     saveState(undefined, updatedBookings);
+
+    try {
+      if (bookingId && !bookingId.startsWith('bk-guest')) {
+        const supabase = createClient();
+        await supabase.from('bookings').update({
+          status: 'confirmed',
+          payment_method: paymentMethod,
+          updated_at: new Date().toISOString(),
+        }).eq('id', bookingId);
+      }
+    } catch (e) {
+      console.warn('Supabase payment confirm sync (non-blocking):', e);
+    }
+
     return updatedBookings.find(b => b.id === bookingId)!;
   };
 
@@ -325,6 +390,21 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
       return b;
     });
     saveState(undefined, updatedBookings);
+
+    try {
+      const supabase = createClient();
+      const targetBooking = updatedBookings.find(b => b.id === bookingId);
+      if (targetBooking) {
+        await supabase.from('bookings').update({
+          status: targetBooking.status,
+          cancellation_reason: reason,
+          updated_at: new Date().toISOString(),
+        }).eq('id', bookingId);
+      }
+    } catch (e) {
+      console.warn('Supabase cancel sync (non-blocking):', e);
+    }
+
     return updatedBookings.find(b => b.id === bookingId)!;
   };
 

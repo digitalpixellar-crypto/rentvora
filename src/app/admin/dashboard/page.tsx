@@ -45,7 +45,9 @@ export default function AdminDashboardPage() {
     updateCommissionRate, 
     updateCarStatus, 
     updateOwnerKycStatus, 
-    addLocation 
+    addLocation,
+    confirmPayment,
+    cancelBooking,
   } = useMarketplace();
 
   const [tab, setTab] = useState<'overview' | 'kyc' | 'cars' | 'bookings' | 'locations' | 'settings'>('overview');
@@ -498,64 +500,122 @@ export default function AdminDashboardPage() {
       )}
 
       {/* 7. TAB: BOOKINGS LEDGER */}
-      {tab === 'bookings' && (
-        <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-md space-y-6">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-2 border-b border-slate-100">
-            <div>
-              <h2 className="text-xl font-black text-slate-900">Official Bookings Ledger ({bookings.length})</h2>
-              <p className="text-xs text-slate-500">Live transaction records with automatic fee splitting.</p>
-            </div>
-            <button
-              onClick={exportBookingsToCsv}
-              className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold flex items-center gap-1.5"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span>Download Ledger CSV</span>
-            </button>
-          </div>
+      {tab === 'bookings' && (() => {
+        const bookingStatusColor = (status: string) => {
+          if (status === 'confirmed' || status === 'active') return 'bg-emerald-100 text-emerald-800';
+          if (status === 'pending_payment') return 'bg-amber-100 text-amber-800';
+          if (['cancelled_by_customer', 'cancelled_by_owner', 'refunded', 'rejected'].includes(status)) return 'bg-rose-100 text-rose-800';
+          if (status === 'completed') return 'bg-blue-100 text-blue-800';
+          return 'bg-slate-100 text-slate-700';
+        };
 
-          <div className="divide-y divide-slate-100 text-xs">
-            {bookings.map(b => (
-              <div key={b.id} className="py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-black text-sm text-slate-900">{b.booking_reference}</span>
-                    <span className="text-xs text-slate-600 font-semibold">• {b.car?.brand} {b.car?.model}</span>
-                    <span className="text-[10px] font-bold text-[#D71920] bg-red-50 px-2 py-0.5 rounded-full">
-                      {b.rental_type === 'with_driver' ? '👔 Chauffeur' : '🚗 Self-Drive'}
-                    </span>
-                  </div>
-                  <div className="text-slate-500">
-                    Renter: <strong>{b.customer?.full_name}</strong> ({b.customer?.phone}) • Pickup: {b.pickup_location?.area_locality}
-                  </div>
-                  <div className="text-[11px] text-slate-400">
-                    Schedule: {formatDateTime(b.start_time)} to {formatDateTime(b.end_time)}
-                  </div>
-                </div>
-
-                <div className="text-right shrink-0">
-                  <div className="font-black text-base text-slate-900">{formatCurrency(b.total_amount)}</div>
-                  <div className="text-[11px] text-emerald-700 font-bold">Platform Fee: +{formatCurrency(b.platform_commission_amount)}</div>
-                  <div className="flex items-center justify-end gap-1.5 mt-1">
-                    <span className="text-[10px] uppercase font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full inline-block">
-                      {b.status}
-                    </span>
-                    <a
-                      href={`/customer/invoice/${b.id}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="px-2 py-0.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[10px] inline-flex items-center gap-1 border border-slate-200"
-                    >
-                      <FileText className="w-2.5 h-2.5 text-[#D71920]" />
-                      <span>Invoice</span>
-                    </a>
-                  </div>
-                </div>
+        return (
+          <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-md space-y-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-2 border-b border-slate-100">
+              <div>
+                <h2 className="text-xl font-black text-slate-900">Official Bookings Ledger ({bookings.length})</h2>
+                <p className="text-xs text-slate-500">Live transaction records with automatic fee splitting.</p>
               </div>
-            ))}
+              <button
+                onClick={exportBookingsToCsv}
+                className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold flex items-center gap-1.5"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Download Ledger CSV</span>
+              </button>
+            </div>
+
+            <div className="divide-y divide-slate-100 text-xs">
+              {bookings.map(b => (
+                <div key={b.id} className="py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-black text-sm text-slate-900">{b.booking_reference}</span>
+                      <span className="text-xs text-slate-600 font-semibold">• {b.car?.brand} {b.car?.model}</span>
+                      <span className="text-[10px] font-bold text-[#D71920] bg-red-50 px-2 py-0.5 rounded-full">
+                        {b.rental_type === 'with_driver' ? '👔 Chauffeur' : '🚗 Self-Drive'}
+                      </span>
+                    </div>
+                    <div className="text-slate-500">
+                      Renter: <strong>{b.customer?.full_name}</strong> ({b.customer?.phone}) • Pickup: {b.pickup_location?.area_locality}
+                    </div>
+                    <div className="text-[11px] text-slate-400">
+                      Schedule: {formatDateTime(b.start_time)} to {formatDateTime(b.end_time)}
+                    </div>
+                  </div>
+
+                  <div className="text-right shrink-0 space-y-1.5">
+                    <div className="font-black text-base text-slate-900">{formatCurrency(b.total_amount)}</div>
+                    <div className="text-[11px] text-emerald-700 font-bold">Platform Fee: +{formatCurrency(b.platform_commission_amount)}</div>
+                    <div className="flex items-center justify-end gap-1.5 flex-wrap">
+                      {/* Status Badge */}
+                      <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full inline-block ${bookingStatusColor(b.status)}`}>
+                        {b.status.replace(/_/g, ' ')}
+                      </span>
+
+                      {/* Confirm Payment Button (pending_payment only) */}
+                      {b.status === 'pending_payment' && (
+                        <button
+                          onClick={() => confirmPayment(b.id, 'admin_manual')}
+                          className="px-2 py-0.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] inline-flex items-center gap-1"
+                          title="Confirm Payment"
+                        >
+                          <CheckCircle className="w-2.5 h-2.5" />
+                          <span>Confirm</span>
+                        </button>
+                      )}
+
+                      {/* Cancel Booking (non-cancelled bookings) */}
+                      {!['cancelled_by_customer', 'cancelled_by_owner', 'refunded', 'rejected'].includes(b.status) && (
+                        <button
+                          onClick={() => cancelBooking(b.id, 'Cancelled by admin', 'admin')}
+                          className="px-2 py-0.5 rounded-full bg-rose-100 hover:bg-rose-200 text-rose-700 font-bold text-[10px] inline-flex items-center gap-1 border border-rose-200"
+                          title="Cancel Booking"
+                        >
+                          <XCircle className="w-2.5 h-2.5" />
+                          <span>Cancel</span>
+                        </button>
+                      )}
+
+                      {/* Call Customer */}
+                      <a
+                        href={'tel:' + b.customer?.phone}
+                        className="p-1 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 inline-flex items-center border border-slate-200"
+                        title="Call Customer"
+                      >
+                        <Phone className="w-2.5 h-2.5" />
+                      </a>
+
+                      {/* WhatsApp Customer */}
+                      <a
+                        href={getWhatsAppSupportUrl(`Hello ${b.customer?.full_name}, this is RENTVORA Admin regarding your booking ${b.booking_reference}.`)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-1 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white inline-flex items-center"
+                        title="WhatsApp Customer"
+                      >
+                        <MessageCircle className="w-2.5 h-2.5" />
+                      </a>
+
+                      {/* Invoice */}
+                      <a
+                        href={`/customer/invoice/${b.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-2 py-0.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[10px] inline-flex items-center gap-1 border border-slate-200"
+                      >
+                        <FileText className="w-2.5 h-2.5 text-[#D71920]" />
+                        <span>Invoice</span>
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
+
 
       {/* 8. TAB: SERVICE HUBS */}
       {tab === 'locations' && (

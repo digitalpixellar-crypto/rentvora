@@ -57,6 +57,7 @@ function CarsContent() {
         if (sortBy === 'price_low') return a.price_per_day - b.price_per_day;
         if (sortBy === 'price_high') return b.price_per_day - a.price_per_day;
         if (sortBy === 'rating') return (b.rating || 0) - (a.rating || 0);
+        if (sortBy === 'recommended') return (b.rating || 0) - (a.rating || 0);
         return 0;
       });
   }, [cars, locationParam, filters, sortBy]);
@@ -87,8 +88,13 @@ function CarsContent() {
 
       {/* Controls & Results Count */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
-        <div className="text-sm font-semibold text-slate-700">
-          Showing <span className="font-extrabold text-slate-950">{filteredCars.length}</span> cars available in Proddatur
+        <div className="text-sm font-semibold text-slate-700 flex items-center gap-3 flex-wrap">
+          <span>Showing <span className="font-extrabold text-slate-950">{filteredCars.length}</span> cars available in Proddatur</span>
+          {filteredCars.length > 0 && (
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-700 text-xs font-bold">
+              ⭐ Avg Rating: {(filteredCars.reduce((sum, c) => sum + (c.rating || 0), 0) / filteredCars.length).toFixed(1)}★
+            </span>
+          )}
         </div>
 
         <div className="flex items-center gap-3">

@@ -394,6 +394,7 @@ export default function OwnerDashboardPage() {
             </p>
           </div>
 
+          {/* Bank account card with edit button */}
           <div className="p-5 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
             <h3 className="font-extrabold text-sm text-slate-900">Registered Bank Account</h3>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs text-slate-600">
@@ -406,27 +407,115 @@ export default function OwnerDashboardPage() {
                 <span className="font-bold text-slate-900">XXXX-XXXX-4892</span>
               </div>
               <div>
-                <span className="text-slate-400 block">Branch & IFSC</span>
+                <span className="text-slate-400 block">Branch &amp; IFSC</span>
                 <span className="font-bold text-slate-900">Proddatur Main (SBIN0000902)</span>
               </div>
             </div>
+            <button
+              onClick={() => alert('Contact RENTVORA support at +91 78938 17322 to update bank details')}
+              className="mt-2 px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-700 text-white text-[11px] font-bold transition"
+            >
+              ✏️ EDIT BANK DETAILS
+            </button>
           </div>
 
-          <div className="space-y-3">
-            <h3 className="font-extrabold text-sm text-slate-900">Recent Booking Payouts</h3>
-            <div className="space-y-2">
-              {ownerBookings.map((b) => (
-                <div key={b.id} className="p-4 rounded-2xl bg-white border border-slate-200 flex items-center justify-between text-xs">
-                  <div>
-                    <div className="font-bold text-slate-900">{b.car?.brand} {b.car?.model} — Ref: {b.booking_reference}</div>
-                    <div className="text-slate-400 text-[11px]">Completed: {formatDateTime(b.end_time)}</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-black text-emerald-600 text-sm">+{formatCurrency((b.base_rental_amount - b.platform_commission_amount) + (b.driver_allowance_amount || 0))}</div>
-                    <div className="text-[10px] text-emerald-700 font-bold">✓ Settled via IMPS</div>
-                  </div>
+          {/* Settled vs Pending running totals */}
+          {(() => {
+            const settled = ownerBookings
+              .filter(b => b.status === 'completed')
+              .reduce((sum, b) => sum + ((b.base_rental_amount - b.platform_commission_amount) + (b.driver_allowance_amount || 0)), 0);
+            const pending = ownerBookings
+              .filter(b => b.status === 'confirmed' || b.status === 'active')
+              .reduce((sum, b) => sum + ((b.base_rental_amount - b.platform_commission_amount) + (b.driver_allowance_amount || 0)), 0);
+            return (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 space-y-0.5">
+                  <div className="text-[11px] font-bold text-emerald-700 uppercase tracking-wide">Total Settled</div>
+                  <div className="text-2xl font-black text-emerald-700">{formatCurrency(settled)}</div>
+                  <div className="text-[10px] text-emerald-600">Transferred via IMPS to SBI ******4892</div>
                 </div>
-              ))}
+                <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 space-y-0.5">
+                  <div className="text-[11px] font-bold text-amber-700 uppercase tracking-wide">Pending Settlement</div>
+                  <div className="text-2xl font-black text-amber-600">{formatCurrency(pending)}</div>
+                  <div className="text-[10px] text-amber-600">Will be credited within 24h of trip end</div>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Per-booking breakdown */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="font-extrabold text-sm text-slate-900">Booking-wise Payout Breakdown</h3>
+              {/* CSV Export */}
+              <button
+                onClick={() => {
+                  const headers = ['Ref', 'Car', 'Trip End', 'Base Fare', 'Driver Allowance', 'Platform Fee', 'Net Payout', 'Status'];
+                  const rows = ownerBookings.map(b => [
+                    b.booking_reference,
+                    `${b.car?.brand} ${b.car?.model}`,
+                    formatDateTime(b.end_time),
+                    b.base_rental_amount,
+                    b.driver_allowance_amount || 0,
+                    b.platform_commission_amount,
+                    (b.base_rental_amount - b.platform_commission_amount) + (b.driver_allowance_amount || 0),
+                    b.status,
+                  ]);
+                  const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
+                  const blob = new Blob([csv], { type: 'text/csv' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url; a.download = 'rentvora-earnings.csv'; a.click();
+                  URL.revokeObjectURL(url);
+                }}
+                className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-700 text-white text-[11px] font-bold transition flex items-center gap-1.5"
+              >
+                📥 Export CSV
+              </button>
+            </div>
+            <div className="space-y-3">
+              {ownerBookings.map((b) => {
+                const net = (b.base_rental_amount - b.platform_commission_amount) + (b.driver_allowance_amount || 0);
+                let statusBadge: React.ReactNode;
+                if (b.status === 'completed') {
+                  statusBadge = <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 font-bold text-[10px]">✓ Settled via IMPS</span>;
+                } else if (b.status === 'confirmed' || b.status === 'active') {
+                  statusBadge = <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-bold text-[10px]">⏳ Settlement in 24h after trip ends</span>;
+                } else if (b.status === 'pending_payment') {
+                  statusBadge = <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-bold text-[10px]">⚡ Awaiting customer payment</span>;
+                } else {
+                  statusBadge = <span className="px-2 py-0.5 rounded-full bg-rose-100 text-rose-600 font-bold text-[10px]">✕ No payout (cancelled)</span>;
+                }
+                return (
+                  <div key={b.id} className="p-4 rounded-2xl bg-white border border-slate-200 space-y-3">
+                    <div className="flex items-start justify-between gap-2 flex-wrap">
+                      <div>
+                        <div className="font-bold text-slate-900 text-xs">{b.car?.brand} {b.car?.model} — Ref: {b.booking_reference}</div>
+                        <div className="text-slate-400 text-[11px] mt-0.5">Trip End: {formatDateTime(b.end_time)}</div>
+                      </div>
+                      {statusBadge}
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
+                      <div className="p-2 bg-slate-50 rounded-xl border border-slate-100">
+                        <div className="text-slate-400">Base Fare</div>
+                        <div className="font-bold text-slate-900">{formatCurrency(b.base_rental_amount)}</div>
+                      </div>
+                      <div className="p-2 bg-slate-50 rounded-xl border border-slate-100">
+                        <div className="text-slate-400">Driver Allowance</div>
+                        <div className="font-bold text-slate-900">{formatCurrency(b.driver_allowance_amount || 0)}</div>
+                      </div>
+                      <div className="p-2 bg-rose-50 rounded-xl border border-rose-100">
+                        <div className="text-rose-400">Platform Fee</div>
+                        <div className="font-bold text-rose-600">-{formatCurrency(b.platform_commission_amount)}</div>
+                      </div>
+                      <div className="p-2 bg-emerald-50 rounded-xl border border-emerald-200">
+                        <div className="text-emerald-600 font-semibold">Net Payout</div>
+                        <div className="font-black text-emerald-700">{formatCurrency(net)}</div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>

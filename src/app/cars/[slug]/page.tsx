@@ -123,6 +123,17 @@ function CarDetailsContent() {
     e.preventDefault();
     setBookingError(null);
 
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (new Date(pickupDate) < today) {
+      setBookingError('Pickup date cannot be in the past. Please select today or a future date.');
+      return;
+    }
+    if (new Date(dropoffDate) < new Date(pickupDate)) {
+      setBookingError('Return date must be after pickup date.');
+      return;
+    }
+
     if (!isCarAvailable) {
       setBookingError('Selected vehicle is already booked for these dates. Please choose different dates/times.');
       return;
@@ -547,6 +558,7 @@ function CarDetailsContent() {
                     type="date"
                     value={pickupDate}
                     onChange={(e) => setPickupDate(e.target.value)}
+                    min={new Date().toISOString().split('T')[0]}
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-semibold text-slate-800 outline-none"
                   />
                 </div>
@@ -573,6 +585,7 @@ function CarDetailsContent() {
                     type="date"
                     value={dropoffDate}
                     onChange={(e) => setDropoffDate(e.target.value)}
+                    min={pickupDate}
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-semibold text-slate-800 outline-none"
                   />
                 </div>

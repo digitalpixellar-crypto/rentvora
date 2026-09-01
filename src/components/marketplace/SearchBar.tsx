@@ -110,6 +110,7 @@ export default function SearchBar({ compact = false }: { compact?: boolean }) {
               type="date"
               value={pickupDate}
               onChange={(e) => setPickupDate(e.target.value)}
+              min={new Date().toISOString().split('T')[0]}
               className="bg-transparent text-xs font-bold text-slate-900 outline-none w-full cursor-pointer"
             />
             <input
@@ -132,6 +133,7 @@ export default function SearchBar({ compact = false }: { compact?: boolean }) {
               type="date"
               value={dropoffDate}
               onChange={(e) => setDropoffDate(e.target.value)}
+              min={pickupDate}
               className="bg-transparent text-xs font-bold text-slate-900 outline-none w-full cursor-pointer"
             />
             <input
