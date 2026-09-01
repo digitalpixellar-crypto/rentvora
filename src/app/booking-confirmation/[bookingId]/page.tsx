@@ -28,6 +28,31 @@ export default function BookingConfirmationPage() {
   const { bookings } = useMarketplace();
   const booking = bookings.find(b => b.id === bookingId);
 
+  // Automated WhatsApp & SMS Notification Webhook Trigger
+  React.useEffect(() => {
+    if (booking) {
+      try {
+        const carTitle = `${booking.car?.brand || 'Car'} ${booking.car?.model || ''}`;
+        fetch('/api/notifications/dispatch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'BOOKING_CONFIRMED',
+            recipientPhone: booking.customer?.phone || '7893817322',
+            recipientName: booking.customer?.full_name || 'Customer',
+            bookingRef: booking.booking_reference,
+            carName: carTitle,
+            pickupPoint: booking.pickup_location?.area_locality || 'Proddatur RTC Bus Stand Hub',
+            startTime: formatDateTime(booking.start_time),
+            endTime: formatDateTime(booking.end_time),
+            totalAmount: booking.total_amount,
+            rentalMode: booking.rental_type,
+          }),
+        }).catch(err => console.warn('Notification webhook background notice:', err));
+      } catch {}
+    }
+  }, [booking]);
+
   if (!booking) {
     return (
       <div className="max-w-xl mx-auto px-4 py-20 text-center space-y-4">
