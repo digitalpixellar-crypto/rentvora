@@ -1,6 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+export const dynamic = 'force-dynamic';
+
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { 
   ShieldCheck,
@@ -24,7 +26,9 @@ import {
   Filter, 
   ExternalLink,
   MessageCircle,
-  FileText
+  FileText,
+  Loader2,
+  LogOut
 } from 'lucide-react';
 import { useMarketplace } from '@/lib/mock-data/client-store';
 import { formatCurrency, formatDateTime } from '@/lib/utils/formatters';
@@ -47,10 +51,34 @@ export default function AdminDashboardPage() {
   const [tab, setTab] = useState<'overview' | 'kyc' | 'cars' | 'bookings' | 'locations' | 'settings'>('overview');
   const [isAdminUnlocked, setIsAdminUnlocked] = useState(false);
   const [adminPasscode, setAdminPasscode] = useState('');
-  const [passcodeError, setPasscodeError] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+  const [authErrorMessage, setAuthErrorMessage] = useState('');
   const [newCommission, setNewCommission] = useState(commissionRate);
   const [surgeMultiplier, setSurgeMultiplier] = useState(0); // 0%, 10%, 20%
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Check existing session token on mount
+  useEffect(() => {
+    try {
+      const token = sessionStorage.getItem('rv_admin_token');
+      if (token) {
+        fetch('/api/admin/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token }),
+        })
+          .then(res => res.json())
+          .then(data => {
+            if (data.valid) {
+              setIsAdminUnlocked(true);
+            } else {
+              sessionStorage.removeItem('rv_admin_token');
+            }
+          })
+          .catch(() => {});
+      }
+    } catch {}
+  }, []);
   
   // Location form state
   const [newCity, setNewCity] = useState('Kadapa');
@@ -129,14 +157,44 @@ export default function AdminDashboardPage() {
   };
 
   
-  const handleUnlockAdmin = (e: React.FormEvent) => {
+  const handleUnlockAdmin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (adminPasscode === 'rentvora2026' || adminPasscode === 'admin' || adminPasscode === '1234') {
+    if (!adminPasscode.trim()) return;
+    setAuthErrorMessage('');
+    setVerifying(true);
+
+    try {
+      const res = await fetch('/api/admin/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ passcode: adminPasscode }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        setAuthErrorMessage(data.error || 'Invalid admin credentials');
+        return;
+      }
+
+      if (data.token) {
+        sessionStorage.setItem('rv_admin_token', data.token);
+      }
       setIsAdminUnlocked(true);
-      setPasscodeError(false);
-    } else {
-      setPasscodeError(true);
+      setAdminPasscode('');
+    } catch (err: any) {
+      setAuthErrorMessage('Authentication network error. Please try again.');
+    } finally {
+      setVerifying(false);
     }
+  };
+
+  const handleLockAdmin = () => {
+    try {
+      sessionStorage.removeItem('rv_admin_token');
+    } catch {}
+    setIsAdminUnlocked(false);
+    setAdminPasscode('');
+    setAuthErrorMessage('');
   };
 
   if (!isAdminUnlocked && currentUser?.role !== 'admin') {
@@ -151,54 +209,48 @@ export default function AdminDashboardPage() {
             <span className="text-[10px] font-black uppercase tracking-widest text-[#D71920]">Restricted Access</span>
             <h2 className="text-2xl font-black text-slate-900">Super Admin Shield</h2>
             <p className="text-xs text-slate-500">
-              Enter your master administration security PIN to manage KYC, take rates, and financial reports.
+              Enter the master administration security key to access platform control, KYC verifications, and financial ledgers.
             </p>
           </div>
 
           <form onSubmit={handleUnlockAdmin} className="space-y-4 text-left">
             <div>
               <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                Admin Master PIN
+                Master Security Key / Passcode
               </label>
               <input
                 type="password"
                 required
-                placeholder="Enter PIN (e.g. rentvora2026)"
+                autoComplete="current-password"
+                placeholder="••••••••••••"
                 value={adminPasscode}
                 onChange={(e) => {
                   setAdminPasscode(e.target.value);
-                  setPasscodeError(false);
+                  setAuthErrorMessage('');
                 }}
                 className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 text-xs font-black text-slate-900 outline-none focus:border-[#D71920]"
               />
-              {passcodeError && (
-                <p className="text-[11px] text-rose-600 font-bold mt-1.5 flex items-center gap-1">
-                  <AlertCircle className="w-3.5 h-3.5" /> Incorrect admin PIN. (Default: rentvora2026)
-                </p>
+              {authErrorMessage && (
+                <div className="mt-2 p-3 rounded-xl bg-rose-50 border border-rose-200 text-[11px] text-rose-700 font-bold flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-rose-600 mt-0.5" />
+                  <span>{authErrorMessage}</span>
+                </div>
               )}
             </div>
 
             <button
               type="submit"
-              className="w-full py-3.5 rounded-2xl bg-[#D71920] hover:bg-[#b8141a] text-white font-black text-xs shadow-lg shadow-[#D71920]/30 transition flex items-center justify-center gap-2 cursor-pointer"
+              disabled={verifying}
+              className="w-full py-3.5 rounded-2xl bg-[#D71920] hover:bg-[#b8141a] disabled:opacity-60 text-white font-black text-xs shadow-lg shadow-[#D71920]/30 transition flex items-center justify-center gap-2 cursor-pointer"
             >
-              <ShieldCheck className="w-4 h-4" />
-              <span>Unlock Admin Panel →</span>
+              {verifying ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
+              <span>{verifying ? 'Verifying Security Token...' : 'Authenticate & Unlock →'}</span>
             </button>
           </form>
 
-          <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
-            <span className="text-slate-400">Demo Admin PIN:</span>
-            <button
-              type="button"
-              onClick={() => {
-                setAdminPasscode('rentvora2026');
-                setIsAdminUnlocked(true);
-              }}
-              className="text-[#D71920] font-bold hover:underline"
-            >
-              Auto-fill rentvora2026
-            </button>
+          <div className="pt-3 border-t border-slate-100 flex items-center justify-center gap-1.5 text-[11px] text-slate-400">
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+            <span>Encrypted Server-Side Token Authorization</span>
           </div>
         </div>
       </div>
@@ -217,17 +269,26 @@ export default function AdminDashboardPage() {
           </div>
           <h1 className="text-2xl sm:text-3xl font-black">RENTVORA Control Center</h1>
           <p className="text-xs text-slate-400">
-            Platform Guard: <span className="text-emerald-400 font-bold">Live & Connected</span> • Database: Supabase PostgreSQL (ap-south-1)
+            Platform Guard: <span className="text-emerald-400 font-bold">Live &amp; Connected</span> &bull; Database: Supabase PostgreSQL (ap-south-1)
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-2.5">
+        <div className="flex flex-wrap items-center gap-2.5">
           <button
             onClick={exportBookingsToCsv}
-            className="px-4 py-2.5 rounded-2xl bg-white hover:bg-slate-100 text-slate-900 font-extrabold text-xs flex items-center gap-2 shadow-md transition"
+            className="px-4 py-2.5 rounded-2xl bg-white hover:bg-slate-100 text-slate-900 font-extrabold text-xs flex items-center gap-2 shadow-md transition cursor-pointer"
           >
             <Download className="w-4 h-4 text-[#D71920]" />
             <span>Export Bookings CSV</span>
+          </button>
+
+          <button
+            onClick={handleLockAdmin}
+            className="px-4 py-2.5 rounded-2xl bg-rose-950/60 hover:bg-rose-900/80 text-rose-300 font-bold text-xs flex items-center gap-1.5 border border-rose-800/60 shadow-md transition cursor-pointer"
+            title="Lock Admin Session"
+          >
+            <LogOut className="w-3.5 h-3.5 text-rose-400" />
+            <span>Lock Session</span>
           </button>
         </div>
       </div>
