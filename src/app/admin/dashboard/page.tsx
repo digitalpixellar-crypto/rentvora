@@ -23,7 +23,8 @@ import {
   Search, 
   Filter, 
   ExternalLink,
-  MessageCircle
+  MessageCircle,
+  FileText
 } from 'lucide-react';
 import { useMarketplace } from '@/lib/mock-data/client-store';
 import { formatCurrency, formatDateTime } from '@/lib/utils/formatters';
@@ -474,9 +475,20 @@ export default function AdminDashboardPage() {
                 <div className="text-right shrink-0">
                   <div className="font-black text-base text-slate-900">{formatCurrency(b.total_amount)}</div>
                   <div className="text-[11px] text-emerald-700 font-bold">Platform Fee: +{formatCurrency(b.platform_commission_amount)}</div>
-                  <span className="text-[10px] uppercase font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full inline-block mt-1">
-                    {b.status}
-                  </span>
+                  <div className="flex items-center justify-end gap-1.5 mt-1">
+                    <span className="text-[10px] uppercase font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full inline-block">
+                      {b.status}
+                    </span>
+                    <a
+                      href={`/customer/invoice/${b.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-2 py-0.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[10px] inline-flex items-center gap-1 border border-slate-200"
+                    >
+                      <FileText className="w-2.5 h-2.5 text-[#D71920]" />
+                      <span>Invoice</span>
+                    </a>
+                  </div>
                 </div>
               </div>
             ))}

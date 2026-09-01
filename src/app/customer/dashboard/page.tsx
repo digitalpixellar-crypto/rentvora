@@ -14,17 +14,20 @@ import {
   CheckCircle,
   MapPin,
   MessageCircle,
-  Lock
+  Lock,
+  Printer
 } from 'lucide-react';
 import { useMarketplace } from '@/lib/mock-data/client-store';
 import { formatCurrency, formatDateTime } from '@/lib/utils/formatters';
 import { createWhatsAppUrl, generateHostBookingWhatsAppMessage } from '@/lib/utils/whatsapp';
 import { Booking } from '@/types';
+import InvoiceModal from '@/components/marketplace/InvoiceModal';
 
 export default function CustomerDashboardPage() {
   const { bookings, currentUser, isAuthLoaded, logout, cancelBooking, addReview } = useMarketplace();
   const [activeTab, setActiveTab] = useState<'upcoming' | 'completed' | 'cancelled'>('upcoming');
 
+  const [invoiceModalBooking, setInvoiceModalBooking] = useState<Booking | null>(null);
   const [cancelModalBooking, setCancelModalBooking] = useState<Booking | null>(null);
   const [cancelReason, setCancelReason] = useState('Change of travel plans');
   const [cancelling, setCancelling] = useState(false);
@@ -198,11 +201,14 @@ export default function CustomerDashboardPage() {
                         <MessageCircle className="w-3.5 h-3.5" />
                         <span>WhatsApp Host</span>
                       </a>
-                      <Link href={`/booking-confirmation/${b.id}`} className="px-3 py-1.5 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold flex items-center gap-1">
-                        <FileText className="w-3.5 h-3.5" />
-                        <span>Receipt</span>
-                      </Link>
-                      <button onClick={() => setCancelModalBooking(b)} className="px-3 py-1.5 rounded-xl bg-rose-50 text-rose-700 text-xs font-bold">
+                      <button
+                        onClick={() => setInvoiceModalBooking(b)}
+                        className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold flex items-center gap-1 shadow-xs transition"
+                      >
+                        <Printer className="w-3.5 h-3.5 text-[#D71920]" />
+                        <span>Tax Invoice</span>
+                      </button>
+                      <button onClick={() => setCancelModalBooking(b)} className="px-3 py-1.5 rounded-xl bg-rose-50 text-rose-700 text-xs font-bold hover:bg-rose-100 transition">
                         Cancel
                       </button>
                     </div>
@@ -219,10 +225,19 @@ export default function CustomerDashboardPage() {
               <h4 className="font-bold text-slate-900">{b.car?.brand} {b.car?.model}</h4>
               <p className="text-slate-500">{formatDateTime(b.start_time)}</p>
             </div>
-            <button onClick={() => setReviewModalBooking(b)} className="px-4 py-2 rounded-xl bg-[#D71920] text-white font-bold flex items-center gap-1">
-              <Star className="w-3.5 h-3.5" />
-              <span>Review</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setInvoiceModalBooking(b)}
+                className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold flex items-center gap-1"
+              >
+                <Printer className="w-3.5 h-3.5 text-[#D71920]" />
+                <span>Invoice</span>
+              </button>
+              <button onClick={() => setReviewModalBooking(b)} className="px-4 py-2 rounded-xl bg-[#D71920] text-white font-bold flex items-center gap-1">
+                <Star className="w-3.5 h-3.5" />
+                <span>Review</span>
+              </button>
+            </div>
           </div>
         ))}
 
@@ -275,6 +290,12 @@ export default function CustomerDashboardPage() {
             </button>
           </div>
         </div>
+      )}
+      {invoiceModalBooking && (
+        <InvoiceModal
+          booking={invoiceModalBooking}
+          onClose={() => setInvoiceModalBooking(null)}
+        />
       )}
     </div>
   );

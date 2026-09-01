@@ -205,13 +205,13 @@ export default function BookingConfirmationPage() {
         {/* Actions */}
         <div className="pt-4 flex flex-wrap items-center justify-between gap-4 print:hidden">
           <div className="flex flex-wrap items-center gap-3">
-            <button
-              onClick={handlePrint}
-              className="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition flex items-center gap-2"
+            <Link
+              href={`/customer/invoice/${booking.id}`}
+              className="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition flex items-center gap-2 shadow-sm"
             >
-              <Printer className="w-4 h-4" />
-              <span>Print / Save PDF Receipt</span>
-            </button>
+              <Printer className="w-4 h-4 text-[#D71920]" />
+              <span>Official GST Tax Invoice (PDF)</span>
+            </Link>
 
             <a
               href={createWhatsAppUrl(booking.owner?.phone || '+91 78938 17322', generateHostBookingWhatsAppMessage(booking))}
